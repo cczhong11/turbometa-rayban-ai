@@ -1,7 +1,7 @@
 /*
  * Gemini Live WebSocket Service
  * Provides real-time audio chat with Google Gemini AI
- * Uses gemini-2.0-flash-exp model for real-time audio conversation
+ * Uses a configurable Gemini Live model for real-time audio conversation
  */
 
 import Foundation
@@ -52,12 +52,17 @@ class GeminiLiveService: NSObject {
 
     // State
     private var isRecording = false
+    private var isSocketOpen = false
     private var hasAudioBeenSent = false
     private var isSessionConfigured = false
 
+    private var usesUnifiedRealtimeInput: Bool {
+        model.hasPrefix("gemini-3.1-flash-live")
+    }
+
     init(apiKey: String, model: String? = nil) {
         self.apiKey = apiKey
-        self.model = model ?? "gemini-2.0-flash-exp"
+        self.model = model ?? "gemini-2.5-flash-native-audio-preview-12-2025"
         super.init()
         setupAudioEngine()
     }
@@ -121,6 +126,8 @@ class GeminiLiveService: NSObject {
     // MARK: - WebSocket Connection
 
     func connect() {
+        isSocketOpen = false
+        isSessionConfigured = false
         // Gemini Live WebSocket URL with API key
         let baseURL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
         let urlString = "\(baseURL)?key=\(apiKey)"
@@ -145,6 +152,7 @@ class GeminiLiveService: NSObject {
 
     func disconnect() {
         print("🔌 [Gemini] 断开 WebSocket 连接")
+        isSocketOpen = false
         webSocket?.cancel(with: .goingAway, reason: nil)
         webSocket = nil
         urlSession?.invalidateAndCancel()
@@ -317,6 +325,10 @@ class GeminiLiveService: NSObject {
     // MARK: - Send Events
 
     private func sendJSON(_ json: [String: Any]) {
+        guard isSocketOpen, webSocket != nil else {
+            print("⚠️ [Gemini] Socket 未就绪，跳过发送")
+            return
+        }
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json),
               let jsonString = String(data: jsonData, encoding: .utf8) else {
             print("❌ [Gemini] 无法序列化 JSON")
@@ -333,9 +345,16 @@ class GeminiLiveService: NSObject {
     }
 
     private func sendRealtimeInput(audioData: String) {
-        // Gemini Live realtime input format
-        let message: [String: Any] = [
-            "realtime_input": [
+        let realtimeInput: [String: Any]
+        if usesUnifiedRealtimeInput {
+            realtimeInput = [
+                "audio": [
+                    "mime_type": "audio/pcm;rate=16000",
+                    "data": audioData
+                ]
+            ]
+        } else {
+            realtimeInput = [
                 "media_chunks": [
                     [
                         "mime_type": "audio/pcm;rate=16000",
@@ -343,11 +362,17 @@ class GeminiLiveService: NSObject {
                     ]
                 ]
             ]
-        ]
+        }
+
+        let message: [String: Any] = ["realtime_input": realtimeInput]
         sendJSON(message)
     }
 
     func sendImageInput(_ image: UIImage) {
+        guard isSessionConfigured else {
+            print("⚠️ [Gemini] 会话未配置完成，跳过图片发送")
+            return
+        }
         guard let imageData = image.jpegData(compressionQuality: 0.6) else {
             print("❌ [Gemini] 无法压缩图片")
             return
@@ -356,8 +381,16 @@ class GeminiLiveService: NSObject {
 
         print("📸 [Gemini] 发送图片: \(imageData.count) bytes")
 
-        let message: [String: Any] = [
-            "realtime_input": [
+        let realtimeInput: [String: Any]
+        if usesUnifiedRealtimeInput {
+            realtimeInput = [
+                "video": [
+                    "mime_type": "image/jpeg",
+                    "data": base64Image
+                ]
+            ]
+        } else {
+            realtimeInput = [
                 "media_chunks": [
                     [
                         "mime_type": "image/jpeg",
@@ -365,7 +398,9 @@ class GeminiLiveService: NSObject {
                     ]
                 ]
             ]
-        ]
+        }
+
+        let message: [String: Any] = ["realtime_input": realtimeInput]
         sendJSON(message)
     }
 
@@ -585,6 +620,7 @@ class GeminiLiveService: NSObject {
 extension GeminiLiveService: URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         print("✅ [Gemini] WebSocket 连接已建立")
+        isSocketOpen = true
         DispatchQueue.main.async {
             self.configureSession()
         }
@@ -592,6 +628,7 @@ extension GeminiLiveService: URLSessionWebSocketDelegate {
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         let reasonString = reason.flatMap { String(data: $0, encoding: .utf8) } ?? "unknown"
+        isSocketOpen = false
         print("🔌 [Gemini] WebSocket 已断开, closeCode: \(closeCode.rawValue), reason: \(reasonString)")
     }
 }

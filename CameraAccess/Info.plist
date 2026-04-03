@@ -41,10 +41,10 @@
 	<dict>
 		<key>AppLinkURLScheme</key>
 		<string>turbometa://</string>
-		<key>MetaAppID</key>
-		<string>$(META_APP_ID)</string>
 		<key>ClientToken</key>
 		<string>$(CLIENT_TOKEN)</string>
+		<key>MetaAppID</key>
+		<string>$(META_APP_ID)</string>
 		<key>TeamID</key>
 		<string>$(DEVELOPMENT_TEAM)</string>
 	</dict>

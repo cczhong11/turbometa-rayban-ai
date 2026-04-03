@@ -177,6 +177,9 @@
 "settings.liveai.provider.description" = "选择用于实时语音对话的 AI 提供商";
 "settings.liveai.alibaba.desc" = "通义千问 Omni 实时音频模型";
 "settings.liveai.google.desc" = "Gemini Live 实时音频模型";
+"settings.liveai.google.model" = "Google Live 模型";
+"settings.liveai.google.model.select" = "选择 Google Live 模型";
+"settings.liveai.google.model.description" = "选择实时会话要使用的 Gemini Live 模型。";
 
 "settings.language" = "输出语言";
 "settings.language.select" = "选择输出语言";

@@ -177,6 +177,9 @@
 "settings.liveai.provider.description" = "Choose the provider for real-time voice chat";
 "settings.liveai.alibaba.desc" = "Qwen Omni real-time audio model";
 "settings.liveai.google.desc" = "Gemini Live real-time audio model";
+"settings.liveai.google.model" = "Google Live Model";
+"settings.liveai.google.model.select" = "Select Google Live Model";
+"settings.liveai.google.model.description" = "Choose which Gemini Live model to use for real-time sessions.";
 
 "settings.language" = "Output Language";
 "settings.language.select" = "Select Output Language";

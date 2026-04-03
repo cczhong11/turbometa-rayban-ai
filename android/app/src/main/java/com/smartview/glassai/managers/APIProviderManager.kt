@@ -123,7 +123,7 @@ enum class LiveAIProvider(val id: String) {
     val defaultModel: String
         get() = when (this) {
             ALIBABA -> "qwen3-omni-flash-realtime"
-            GOOGLE -> "gemini-2.0-flash-exp"
+            GOOGLE -> "gemini-2.5-flash-native-audio-preview-12-2025"
         }
 
     val apiKeyHelpURL: String
@@ -143,6 +143,63 @@ enum class LiveAIProvider(val id: String) {
         fun fromId(id: String): LiveAIProvider {
             return entries.find { it.id == id } ?: ALIBABA
         }
+    }
+}
+
+data class GoogleLiveModel(
+    val id: String,
+    val displayName: String,
+    val description: String
+) {
+    companion object {
+        val availableModels = listOf(
+            GoogleLiveModel(
+                "gemini-3.1-flash-live-preview",
+                "Gemini 3.1 Flash Live Preview",
+                "Preview. Gemini 3 Live model for real-time dialogue."
+            ),
+            GoogleLiveModel(
+                "gemini-2.5-flash-native-audio-preview-12-2025",
+                "Gemini 2.5 Flash Native Audio (12-2025)",
+                "Recommended. Latest native-audio Live API model."
+            ),
+            GoogleLiveModel(
+                "gemini-2.5-flash-native-audio-preview-09-2025",
+                "Gemini 2.5 Flash Native Audio (09-2025)",
+                "Older compatible Live API model."
+            )
+        )
+    }
+}
+
+data class GoogleModelApiResponse(
+    val models: List<GoogleModelApiItem> = emptyList(),
+    val nextPageToken: String? = null
+)
+
+data class GoogleModelApiItem(
+    val name: String,
+    val baseModelId: String? = null,
+    val displayName: String? = null,
+    val description: String? = null,
+    val supportedActions: List<String> = emptyList()
+) {
+    fun toGoogleLiveModel(): GoogleLiveModel {
+        val modelId = baseModelId ?: name.removePrefix("models/")
+        return GoogleLiveModel(
+            id = modelId,
+            displayName = displayName?.ifBlank { modelId } ?: modelId,
+            description = description?.ifBlank { "Google Gemini Live model" } ?: "Google Gemini Live model"
+        )
+    }
+
+    fun isLiveModel(): Boolean {
+        val searchable = listOf(name, baseModelId, displayName, description)
+            .filterNotNull()
+            .joinToString(" ")
+            .lowercase()
+        val supportsBidi = supportedActions.any { it.equals("bidiGenerateContent", ignoreCase = true) }
+        return supportsBidi || searchable.contains(" live")
     }
 }
 
@@ -334,6 +391,15 @@ class APIProviderManager private constructor(context: Context) {
     private val _modelsError = MutableStateFlow<String?>(null)
     val modelsError: StateFlow<String?> = _modelsError
 
+    private val _googleLiveModels = MutableStateFlow<List<GoogleLiveModel>>(GoogleLiveModel.availableModels)
+    val googleLiveModels: StateFlow<List<GoogleLiveModel>> = _googleLiveModels
+
+    private val _isLoadingGoogleLiveModels = MutableStateFlow(false)
+    val isLoadingGoogleLiveModels: StateFlow<Boolean> = _isLoadingGoogleLiveModels
+
+    private val _googleLiveModelsError = MutableStateFlow<String?>(null)
+    val googleLiveModelsError: StateFlow<String?> = _googleLiveModelsError
+
     // MARK: - Setters
 
     fun setCurrentProvider(provider: APIProvider) {
@@ -474,5 +540,52 @@ class APIProviderManager private constructor(context: Context) {
 
     fun visionCapableModels(): List<OpenRouterModel> {
         return _openRouterModels.value.filter { it.isVisionCapable }
+    }
+
+    suspend fun fetchGoogleLiveModels(apiKeyManager: com.smartview.glassai.utils.APIKeyManager) {
+        if (_liveAIProvider.value != LiveAIProvider.GOOGLE) return
+
+        val apiKey = apiKeyManager.getGoogleAPIKey()
+        if (apiKey.isNullOrEmpty()) {
+            _googleLiveModelsError.value = "Please configure Google AI Studio API Key first"
+            _googleLiveModels.value = GoogleLiveModel.availableModels
+            return
+        }
+
+        _isLoadingGoogleLiveModels.value = true
+        _googleLiveModelsError.value = null
+
+        try {
+            val request = Request.Builder()
+                .url("https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey")
+                .get()
+                .build()
+
+            withContext(Dispatchers.IO) {
+                val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    throw IllegalStateException("Failed to fetch Gemini models: ${response.code}")
+                }
+
+                val responseBody = response.body?.string().orEmpty()
+                val modelsResponse = Gson().fromJson(responseBody, GoogleModelApiResponse::class.java)
+                val liveModels = modelsResponse.models
+                    .filter { it.isLiveModel() }
+                    .map { it.toGoogleLiveModel() }
+                    .distinctBy { it.id }
+                    .sortedBy { it.displayName.lowercase() }
+
+                _googleLiveModels.value = if (liveModels.isNotEmpty()) {
+                    liveModels
+                } else {
+                    GoogleLiveModel.availableModels
+                }
+            }
+        } catch (e: Exception) {
+            _googleLiveModelsError.value = e.message ?: "Unknown error"
+            _googleLiveModels.value = GoogleLiveModel.availableModels
+        }
+
+        _isLoadingGoogleLiveModels.value = false
     }
 }

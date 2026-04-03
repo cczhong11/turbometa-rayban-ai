@@ -33,13 +33,14 @@ class OmniRealtimeViewModel: ObservableObject {
     init(apiKey: String) {
         self.apiKey = apiKey
         self.provider = APIProviderManager.staticLiveAIProvider
+        let liveAIModel = APIProviderManager.shared.liveAIModel
 
         // Initialize appropriate service based on provider
         switch provider {
         case .alibaba:
             self.omniService = OmniRealtimeService(apiKey: apiKey)
         case .google:
-            self.geminiService = GeminiLiveService(apiKey: apiKey)
+            self.geminiService = GeminiLiveService(apiKey: apiKey, model: liveAIModel)
         }
 
         setupCallbacks()
@@ -266,7 +267,7 @@ class OmniRealtimeViewModel: ObservableObject {
         case .alibaba:
             aiModel = "qwen3-omni-flash-realtime"
         case .google:
-            aiModel = "gemini-2.0-flash-exp"
+            aiModel = APIProviderManager.shared.liveAIModel
         }
 
         let record = ConversationRecord(

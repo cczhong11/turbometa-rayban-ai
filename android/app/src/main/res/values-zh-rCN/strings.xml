@@ -285,6 +285,9 @@
     <string name="endpoint_singapore">新加坡 (国际)</string>
     <string name="liveai_alibaba">阿里云 通义千问 Omni</string>
     <string name="liveai_google">Google Gemini Live</string>
+    <string name="google_live_model">Google Live 模型</string>
+    <string name="select_google_live_model">选择 Google Live 模型</string>
+    <string name="settings_model_retry">重试</string>
 
     <!-- API Key Types -->
     <string name="apikey_alibaba_beijing">阿里云北京 API Key</string>

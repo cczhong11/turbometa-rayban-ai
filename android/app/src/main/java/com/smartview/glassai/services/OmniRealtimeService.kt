@@ -77,6 +77,8 @@ class OmniRealtimeService(
 
     // Internal
     private var webSocket: WebSocket? = null
+    private var isSocketOpen = false
+    private var isSessionReady = false
     private var audioRecord: AudioRecord? = null
     private var audioTrack: AudioTrack? = null
     private var recordingJob: Job? = null
@@ -107,6 +109,10 @@ class OmniRealtimeService(
     fun connect() {
         if (_isConnected.value) return
 
+        isSocketOpen = false
+        isSessionReady = false
+        _isConnected.value = false
+
         // Reset scope if it was cancelled (after previous disconnect)
         if (!scope.isActive) {
             scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -123,7 +129,7 @@ class OmniRealtimeService(
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d(TAG, "WebSocket connected")
-                _isConnected.value = true
+                isSocketOpen = true
                 sendSessionUpdate()
             }
 
@@ -133,6 +139,8 @@ class OmniRealtimeService(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e(TAG, "WebSocket error: ${t.message}")
+                isSocketOpen = false
+                isSessionReady = false
                 _isConnected.value = false
                 _errorMessage.value = t.message
                 onError?.invoke(t.message ?: "Connection failed")
@@ -140,6 +148,8 @@ class OmniRealtimeService(
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d(TAG, "WebSocket closed: $reason")
+                isSocketOpen = false
+                isSessionReady = false
                 _isConnected.value = false
             }
         })
@@ -150,6 +160,8 @@ class OmniRealtimeService(
         stopAudioPlayback()
         webSocket?.close(1000, "User disconnected")
         webSocket = null
+        isSocketOpen = false
+        isSessionReady = false
         _isConnected.value = false
         _isRecording.value = false
         _isSpeaking.value = false
@@ -178,6 +190,10 @@ class OmniRealtimeService(
     }
 
     fun startRecording() {
+        if (!_isConnected.value) {
+            Log.w(TAG, "Ignoring startRecording before session is ready")
+            return
+        }
         if (_isRecording.value) return
 
         try {
@@ -323,7 +339,7 @@ class OmniRealtimeService(
     }
 
     private fun sendAudioData(audioData: ByteArray) {
-        if (!_isConnected.value) return
+        if (!isSocketOpen || !isSessionReady) return
 
         val base64Audio = Base64.encodeToString(audioData, Base64.NO_WRAP)
         val message = mapOf(
@@ -342,6 +358,7 @@ class OmniRealtimeService(
     }
 
     private fun sendImageFrame(bitmap: Bitmap) {
+        if (!isSocketOpen || !isSessionReady) return
         try {
             val outputStream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
@@ -368,6 +385,8 @@ class OmniRealtimeService(
             when (type) {
                 "session.created", "session.updated" -> {
                     Log.d(TAG, "Session ready")
+                    isSessionReady = true
+                    _isConnected.value = true
                 }
                 "input_audio_buffer.speech_started" -> {
                     _isSpeaking.value = false

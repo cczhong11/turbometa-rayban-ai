@@ -93,7 +93,7 @@ enum LiveAIProvider: String, CaseIterable, Codable {
     var defaultModel: String {
         switch self {
         case .alibaba: return "qwen3-omni-flash-realtime"
-        case .google: return "gemini-2.0-flash-exp"
+        case .google: return "gemini-2.5-flash-native-audio-preview-12-2025"
         }
     }
 
@@ -109,6 +109,61 @@ enum LiveAIProvider: String, CaseIterable, Codable {
         case .alibaba: return endpoint.websocketURL
         case .google: return "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
         }
+    }
+}
+
+struct GoogleLiveModelOption: Identifiable, Hashable {
+    let id: String
+    let displayName: String
+    let description: String
+
+    static let availableModels: [GoogleLiveModelOption] = [
+        GoogleLiveModelOption(
+            id: "gemini-3.1-flash-live-preview",
+            displayName: "Gemini 3.1 Flash Live Preview",
+            description: "Preview. Gemini 3 Live model for real-time dialogue."
+        ),
+        GoogleLiveModelOption(
+            id: "gemini-2.5-flash-native-audio-preview-12-2025",
+            displayName: "Gemini 2.5 Flash Native Audio (12-2025)",
+            description: "Recommended. Latest native-audio Live API model."
+        ),
+        GoogleLiveModelOption(
+            id: "gemini-2.5-flash-native-audio-preview-09-2025",
+            displayName: "Gemini 2.5 Flash Native Audio (09-2025)",
+            description: "Older compatible Live API model."
+        )
+    ]
+}
+
+struct GoogleModelsResponse: Codable {
+    let models: [GoogleModelItem]
+    let nextPageToken: String?
+}
+
+struct GoogleModelItem: Codable {
+    let name: String
+    let baseModelId: String?
+    let displayName: String?
+    let description: String?
+    let supportedActions: [String]?
+
+    func isLiveModel() -> Bool {
+        let searchable = [name, baseModelId, displayName, description]
+            .compactMap { $0 }
+            .joined(separator: " ")
+            .lowercased()
+        let supportsBidi = supportedActions?.contains(where: { $0.caseInsensitiveCompare("bidiGenerateContent") == .orderedSame }) == true
+        return supportsBidi || searchable.contains(" live")
+    }
+
+    func toGoogleLiveModelOption() -> GoogleLiveModelOption {
+        let modelId = baseModelId ?? name.replacingOccurrences(of: "models/", with: "")
+        return GoogleLiveModelOption(
+            id: modelId,
+            displayName: (displayName?.isEmpty == false ? displayName! : modelId),
+            description: (description?.isEmpty == false ? description! : "Google Gemini Live model")
+        )
     }
 }
 
@@ -232,6 +287,9 @@ class APIProviderManager: ObservableObject {
     @Published var openRouterModels: [OpenRouterModel] = []
     @Published var isLoadingModels = false
     @Published var modelsError: String?
+    @Published var googleLiveModels: [GoogleLiveModelOption] = GoogleLiveModelOption.availableModels
+    @Published var isLoadingGoogleLiveModels = false
+    @Published var googleLiveModelsError: String?
 
     private init() {
         // Alibaba Endpoint
@@ -272,6 +330,12 @@ class APIProviderManager: ObservableObject {
 
     var hasLiveAIAPIKey: Bool {
         return !liveAIAPIKey.isEmpty
+    }
+
+    var googleLiveModelDisplayName: String {
+        googleLiveModels.first(where: { $0.id == liveAIModel })?.displayName
+        ?? GoogleLiveModelOption.availableModels.first(where: { $0.id == liveAIModel })?.displayName
+        ?? liveAIModel
     }
 
     // MARK: - Get Current Configuration
@@ -357,6 +421,47 @@ class APIProviderManager: ObservableObject {
 
     func visionCapableModels() -> [OpenRouterModel] {
         return openRouterModels.filter { $0.isVisionCapable }
+    }
+
+    func fetchGoogleLiveModels() async {
+        guard liveAIProvider == .google else { return }
+        guard let apiKey = APIKeyManager.shared.getGoogleAPIKey(), !apiKey.isEmpty else {
+            googleLiveModelsError = "请先配置 Google AI Studio API Key"
+            googleLiveModels = GoogleLiveModelOption.availableModels
+            return
+        }
+
+        isLoadingGoogleLiveModels = true
+        googleLiveModelsError = nil
+
+        do {
+            var components = URLComponents(string: "https://generativelanguage.googleapis.com/v1beta/models")!
+            components.queryItems = [URLQueryItem(name: "key", value: apiKey)]
+            let url = components.url!
+
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                throw NSError(domain: "Gemini", code: -1, userInfo: [NSLocalizedDescriptionKey: "获取 Gemini 模型列表失败"])
+            }
+
+            let decoder = JSONDecoder()
+            let modelsResponse = try decoder.decode(GoogleModelsResponse.self, from: data)
+            let models = modelsResponse.models
+                .filter { $0.isLiveModel() }
+                .map { $0.toGoogleLiveModelOption() }
+                .reduce(into: [String: GoogleLiveModelOption]()) { partialResult, model in
+                    partialResult[model.id] = model
+                }
+                .values
+                .sorted { $0.displayName < $1.displayName }
+
+            googleLiveModels = models.isEmpty ? GoogleLiveModelOption.availableModels : models
+        } catch {
+            googleLiveModelsError = error.localizedDescription
+            googleLiveModels = GoogleLiveModelOption.availableModels
+        }
+
+        isLoadingGoogleLiveModels = false
     }
 }
 

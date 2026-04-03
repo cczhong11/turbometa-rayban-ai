@@ -9,6 +9,7 @@ import com.smartview.glassai.managers.AlibabaVisionModel
 import com.smartview.glassai.managers.APIProvider
 import com.smartview.glassai.managers.APIProviderManager
 import com.smartview.glassai.managers.AppLanguage
+import com.smartview.glassai.managers.GoogleLiveModel
 import com.smartview.glassai.managers.LanguageManager
 import com.smartview.glassai.managers.LiveAIProvider
 import com.smartview.glassai.managers.OpenRouterModel
@@ -123,10 +124,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val _showVisionModelDialog = MutableStateFlow(false)
     val showVisionModelDialog: StateFlow<Boolean> = _showVisionModelDialog.asStateFlow()
 
+    private val _showGoogleLiveModelDialog = MutableStateFlow(false)
+    val showGoogleLiveModelDialog: StateFlow<Boolean> = _showGoogleLiveModelDialog.asStateFlow()
+
     // Vision Model selection - expose provider manager states
     val openRouterModels: StateFlow<List<OpenRouterModel>> = providerManager.openRouterModels
     val isLoadingModels: StateFlow<Boolean> = providerManager.isLoadingModels
     val modelsError: StateFlow<String?> = providerManager.modelsError
+    val googleLiveModels: StateFlow<List<GoogleLiveModel>> = providerManager.googleLiveModels
+    val isLoadingGoogleLiveModels: StateFlow<Boolean> = providerManager.isLoadingGoogleLiveModels
+    val googleLiveModelsError: StateFlow<String?> = providerManager.googleLiveModelsError
 
     // Current editing key type
     private val _editingKeyType = MutableStateFlow<EditingKeyType?>(null)
@@ -222,11 +229,42 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun selectLiveAIProvider(provider: LiveAIProvider) {
         providerManager.setLiveAIProvider(provider)
         _liveAIProvider.value = provider
-        _selectedModel.value = provider.defaultModel
+        _selectedModel.value = providerManager.liveAIModel.value
         _showLiveAIProviderDialog.value = false
         _message.value = "Live AI switched to ${provider.displayName}"
     }
 
+    fun showGoogleLiveModelDialog() {
+        _showGoogleLiveModelDialog.value = true
+        fetchGoogleLiveModels()
+    }
+
+    fun hideGoogleLiveModelDialog() {
+        _showGoogleLiveModelDialog.value = false
+    }
+
+    fun getGoogleLiveModels(): List<GoogleLiveModel> = googleLiveModels.value
+
+    fun fetchGoogleLiveModels() {
+        viewModelScope.launch {
+            providerManager.fetchGoogleLiveModels(apiKeyManager)
+        }
+    }
+
+    fun selectGoogleLiveModel(modelId: String) {
+        providerManager.setLiveAIModel(modelId)
+        _selectedModel.value = modelId
+        _showGoogleLiveModelDialog.value = false
+        _message.value = "Google Live model changed to $modelId"
+    }
+
+    fun getSelectedGoogleLiveModelDisplayName(): String {
+        val modelId = _selectedModel.value
+        return googleLiveModels.value.find { it.id == modelId }?.displayName
+            ?: GoogleLiveModel.availableModels.find { it.id == modelId }?.displayName
+            ?: modelId
+    }
+    
     // MARK: - API Key Management
 
     fun showApiKeyDialog() {

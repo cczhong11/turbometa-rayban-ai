@@ -23,12 +23,12 @@ import java.util.concurrent.TimeUnit
 /**
  * Gemini Live WebSocket Service
  * Provides real-time audio chat with Google Gemini AI
- * Uses gemini-2.0-flash-exp model for real-time audio conversation
+ * Uses a configurable Gemini Live model for real-time audio conversation
  * 1:1 port from iOS GeminiLiveService.swift
  */
 class GeminiLiveService(
     private val apiKey: String,
-    private val model: String = "gemini-2.0-flash-exp",
+    private val model: String = "gemini-2.5-flash-native-audio-preview-12-2025",
     private val outputLanguage: String = "zh-CN",
     private val context: Context? = null
 ) {
@@ -71,6 +71,7 @@ class GeminiLiveService(
 
     // Internal
     private var webSocket: WebSocket? = null
+    private var isSocketOpen = false
     private var audioRecord: AudioRecord? = null
     private var audioTrack: AudioTrack? = null
     private var recordingJob: Job? = null
@@ -92,6 +93,9 @@ class GeminiLiveService(
     private var bluetoothAudioManager: BluetoothAudioManager? = null
     private var currentAudioSource = BluetoothAudioManager.AudioSource.PHONE_MIC
 
+    private val usesUnifiedRealtimeInput: Boolean
+        get() = model.startsWith("gemini-3.1-flash-live")
+
     init {
         // 初始化蓝牙音频管理器
         context?.let {
@@ -106,6 +110,10 @@ class GeminiLiveService(
 
     fun connect() {
         if (_isConnected.value) return
+
+        isSocketOpen = false
+        isSessionConfigured = false
+        _isConnected.value = false
 
         // Reset scope if it was cancelled (after previous disconnect)
         if (!scope.isActive) {
@@ -125,7 +133,7 @@ class GeminiLiveService(
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d(TAG, "WebSocket connected")
-                _isConnected.value = true
+                isSocketOpen = true
                 configureSession()
             }
 
@@ -135,6 +143,7 @@ class GeminiLiveService(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e(TAG, "WebSocket error: ${t.message}")
+                isSocketOpen = false
                 _isConnected.value = false
                 _errorMessage.value = t.message
                 onError?.invoke(t.message ?: "Connection failed")
@@ -142,6 +151,7 @@ class GeminiLiveService(
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d(TAG, "WebSocket closed: $reason")
+                isSocketOpen = false
                 _isConnected.value = false
                 isSessionConfigured = false
             }
@@ -154,6 +164,7 @@ class GeminiLiveService(
         stopAudioPlayback()
         webSocket?.close(1000, "User disconnected")
         webSocket = null
+        isSocketOpen = false
         _isConnected.value = false
         _isRecording.value = false
         _isSpeaking.value = false
@@ -255,6 +266,10 @@ class GeminiLiveService(
     // MARK: - Audio Recording
 
     fun startRecording() {
+        if (!_isConnected.value || !isSessionConfigured) {
+            Log.w(TAG, "Ignoring startRecording before Gemini session is ready")
+            return
+        }
         if (_isRecording.value) return
 
         try {
@@ -342,13 +357,19 @@ class GeminiLiveService(
     }
 
     private fun sendAudioData(audioData: ByteArray) {
-        if (!_isConnected.value || !isSessionConfigured) return
+        if (!isSocketOpen || !_isConnected.value || !isSessionConfigured) return
 
         val base64Audio = Base64.encodeToString(audioData, Base64.NO_WRAP)
 
-        // Gemini Live realtime input format
-        val message = mapOf(
-            "realtime_input" to mapOf(
+        val realtimeInput = if (usesUnifiedRealtimeInput) {
+            mapOf(
+                "audio" to mapOf(
+                    "mime_type" to "audio/pcm;rate=$INPUT_SAMPLE_RATE",
+                    "data" to base64Audio
+                )
+            )
+        } else {
+            mapOf(
                 "media_chunks" to listOf(
                     mapOf(
                         "mime_type" to "audio/pcm;rate=$INPUT_SAMPLE_RATE",
@@ -356,7 +377,9 @@ class GeminiLiveService(
                     )
                 )
             )
-        )
+        }
+
+        val message = mapOf("realtime_input" to realtimeInput)
 
         webSocket?.send(gson.toJson(message))
 
@@ -371,6 +394,7 @@ class GeminiLiveService(
     }
 
     fun sendImageInput(bitmap: Bitmap) {
+        if (!isSocketOpen || !_isConnected.value || !isSessionConfigured) return
         try {
             val outputStream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
@@ -379,8 +403,15 @@ class GeminiLiveService(
 
             Log.d(TAG, "Sending image: ${bytes.size} bytes")
 
-            val message = mapOf(
-                "realtime_input" to mapOf(
+            val realtimeInput = if (usesUnifiedRealtimeInput) {
+                mapOf(
+                    "video" to mapOf(
+                        "mime_type" to "image/jpeg",
+                        "data" to base64Image
+                    )
+                )
+            } else {
+                mapOf(
                     "media_chunks" to listOf(
                         mapOf(
                             "mime_type" to "image/jpeg",
@@ -388,7 +419,9 @@ class GeminiLiveService(
                         )
                     )
                 )
-            )
+            }
+
+            val message = mapOf("realtime_input" to realtimeInput)
 
             webSocket?.send(gson.toJson(message))
         } catch (e: Exception) {
@@ -406,6 +439,7 @@ class GeminiLiveService(
             if (json.has("setupComplete")) {
                 Log.d(TAG, "Session configuration complete")
                 isSessionConfigured = true
+                _isConnected.value = true
                 onConnected?.invoke()
                 return
             }

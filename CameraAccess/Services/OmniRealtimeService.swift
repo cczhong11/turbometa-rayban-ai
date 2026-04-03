@@ -81,6 +81,7 @@ class OmniRealtimeService: NSObject {
 
     // State
     private var isRecording = false
+    private var isSocketOpen = false
     private var hasAudioBeenSent = false
     private var eventIdCounter = 0
 
@@ -147,6 +148,7 @@ class OmniRealtimeService: NSObject {
     // MARK: - WebSocket Connection
 
     func connect() {
+        isSocketOpen = false
         let urlString = "\(baseURL)?model=\(model)"
         print("🔌 [Omni] 准备连接 WebSocket: \(urlString)")
 
@@ -171,6 +173,7 @@ class OmniRealtimeService: NSObject {
 
     func disconnect() {
         print("🔌 [Omni] 断开 WebSocket 连接")
+        isSocketOpen = false
         webSocket?.cancel(with: .goingAway, reason: nil)
         webSocket = nil
         urlSession?.invalidateAndCancel()
@@ -301,6 +304,10 @@ class OmniRealtimeService: NSObject {
     // MARK: - Send Events
 
     private func sendEvent(_ event: [String: Any]) {
+        guard isSocketOpen, webSocket != nil else {
+            print("⚠️ [Omni] Socket 未就绪，跳过发送事件: \(event["type"] as? String ?? "unknown")")
+            return
+        }
         guard let jsonData = try? JSONSerialization.data(withJSONObject: event),
               let jsonString = String(data: jsonData, encoding: .utf8) else {
             print("❌ [Omni] 无法序列化事件")
@@ -565,6 +572,7 @@ class OmniRealtimeService: NSObject {
 extension OmniRealtimeService: URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         print("✅ [Omni] WebSocket 连接已建立, protocol: \(`protocol` ?? "none")")
+        isSocketOpen = true
         DispatchQueue.main.async {
             self.configureSession()
         }
@@ -572,6 +580,7 @@ extension OmniRealtimeService: URLSessionWebSocketDelegate {
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         let reasonString = reason.flatMap { String(data: $0, encoding: .utf8) } ?? "unknown"
+        isSocketOpen = false
         print("🔌 [Omni] WebSocket 已断开, closeCode: \(closeCode.rawValue), reason: \(reasonString)")
     }
 }

@@ -44,6 +44,7 @@ import com.smartview.glassai.managers.AlibabaEndpoint
 import com.smartview.glassai.managers.AlibabaVisionModel
 import com.smartview.glassai.managers.APIProvider
 import com.smartview.glassai.managers.AppLanguage
+import com.smartview.glassai.managers.GoogleLiveModel
 import com.smartview.glassai.managers.LiveAIProvider
 import com.smartview.glassai.managers.OpenRouterModel
 import com.smartview.glassai.services.PorcupineWakeWordService
@@ -96,10 +97,14 @@ fun SettingsScreen(
     val appLanguage by viewModel.appLanguage.collectAsState()
     val editingKeyType by viewModel.editingKeyType.collectAsState()
     val showVisionModelDialog by viewModel.showVisionModelDialog.collectAsState()
+    val showGoogleLiveModelDialog by viewModel.showGoogleLiveModelDialog.collectAsState()
     val selectedVisionModel by viewModel.selectedVisionModel.collectAsState()
     val openRouterModels by viewModel.openRouterModels.collectAsState()
     val isLoadingModels by viewModel.isLoadingModels.collectAsState()
     val modelsError by viewModel.modelsError.collectAsState()
+    val googleLiveModels by viewModel.googleLiveModels.collectAsState()
+    val isLoadingGoogleLiveModels by viewModel.isLoadingGoogleLiveModels.collectAsState()
+    val googleLiveModelsError by viewModel.googleLiveModelsError.collectAsState()
 
     // Picovoice states
     var hasPicovoiceKey by remember { mutableStateOf(PorcupineWakeWordService.hasAccessKey(context)) }
@@ -296,6 +301,14 @@ fun SettingsScreen(
 
                 // Google API Key (only when Google selected for Live AI)
                 if (liveAIProvider == LiveAIProvider.GOOGLE) {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = AppSpacing.medium))
+                    SettingsItem(
+                        icon = Icons.Default.Tune,
+                        title = stringResource(R.string.google_live_model),
+                        subtitle = viewModel.getSelectedGoogleLiveModelDisplayName(),
+                        onClick = { viewModel.showGoogleLiveModelDialog() }
+                    )
+
                     HorizontalDivider(modifier = Modifier.padding(horizontal = AppSpacing.medium))
                     SettingsItem(
                         icon = Icons.Default.Key,
@@ -564,6 +577,18 @@ fun SettingsScreen(
         )
     }
 
+    if (showGoogleLiveModelDialog) {
+        GoogleLiveModelSelectionDialog(
+            selectedModel = selectedModel,
+            models = googleLiveModels,
+            isLoading = isLoadingGoogleLiveModels,
+            error = googleLiveModelsError,
+            onRefresh = { viewModel.fetchGoogleLiveModels() },
+            onSelect = { viewModel.selectGoogleLiveModel(it) },
+            onDismiss = { viewModel.hideGoogleLiveModelDialog() }
+        )
+    }
+
     // Language Selection Dialog
     if (showLanguageDialog) {
         LanguageSelectionDialog(
@@ -605,6 +630,108 @@ fun SettingsScreen(
             onDismiss = { viewModel.hideAppLanguageDialog() }
         )
     }
+}
+
+@Composable
+private fun GoogleLiveModelSelectionDialog(
+    selectedModel: String,
+    models: List<GoogleLiveModel>,
+    isLoading: Boolean,
+    error: String?,
+    onRefresh: () -> Unit,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.select_google_live_model))
+        },
+        text = {
+            when {
+                isLoading -> Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                else -> Column {
+                    error?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TextButton(onClick = onRefresh) {
+                            Text(text = stringResource(R.string.settings_model_retry))
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 360.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(models) { model ->
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onSelect(model.id) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (selectedModel == model.id) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = model.displayName,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = model.description,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = model.id,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    if (selectedModel == model.id) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.done))
+            }
+        }
+    )
 }
 
 @Composable

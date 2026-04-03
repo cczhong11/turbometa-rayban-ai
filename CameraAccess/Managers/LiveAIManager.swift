@@ -174,12 +174,13 @@ class LiveAIManager: ObservableObject {
     // MARK: - Initialize Service
 
     private func initializeService(apiKey: String) {
+        let model = APIProviderManager.shared.liveAIModel
         switch provider {
         case .alibaba:
             omniService = OmniRealtimeService(apiKey: apiKey)
             setupOmniCallbacks()
         case .google:
-            geminiService = GeminiLiveService(apiKey: apiKey)
+            geminiService = GeminiLiveService(apiKey: apiKey, model: model)
             setupGeminiCallbacks()
         }
     }
@@ -400,7 +401,7 @@ class LiveAIManager: ObservableObject {
         case .alibaba:
             aiModel = "qwen3-omni-flash-realtime"
         case .google:
-            aiModel = "gemini-2.0-flash-exp"
+            aiModel = APIProviderManager.shared.liveAIModel
         }
 
         let record = ConversationRecord(

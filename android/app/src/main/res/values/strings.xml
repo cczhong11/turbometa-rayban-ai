@@ -287,6 +287,9 @@
     <string name="endpoint_singapore">Singapore (International)</string>
     <string name="liveai_alibaba">Alibaba Qwen Omni</string>
     <string name="liveai_google">Google Gemini Live</string>
+    <string name="google_live_model">Google Live Model</string>
+    <string name="select_google_live_model">Select Google Live Model</string>
+    <string name="settings_model_retry">Retry</string>
 
     <!-- API Key Types -->
     <string name="apikey_alibaba_beijing">Alibaba Beijing API Key</string>

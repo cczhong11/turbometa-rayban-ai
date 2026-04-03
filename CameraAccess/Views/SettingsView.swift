@@ -1085,6 +1085,32 @@ struct LiveAIProviderSettingsView: View {
                     Text("settings.liveai.provider.description".localized)
                 }
 
+                if providerManager.liveAIProvider == .google {
+                    Section {
+                        NavigationLink {
+                            GoogleLiveModelSettingsView()
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("settings.liveai.google.model".localized)
+                                        .foregroundColor(.primary)
+                                    Text(providerManager.liveAIModel)
+                                        .font(AppTypography.caption)
+                                        .foregroundColor(AppColors.textSecondary)
+                                        .lineLimit(2)
+                                }
+                                Spacer()
+                                Text(providerManager.googleLiveModelDisplayName)
+                                    .font(AppTypography.caption)
+                                    .foregroundColor(AppColors.textSecondary)
+                                    .multilineTextAlignment(.trailing)
+                            }
+                        }
+                    } header: {
+                        Text("Google Gemini Live")
+                    }
+                }
+
                 // API Key status
                 Section {
                     HStack {
@@ -1136,6 +1162,78 @@ struct LiveAIProviderSettingsView: View {
             return "settings.liveai.alibaba.desc".localized
         case .google:
             return "settings.liveai.google.desc".localized
+        }
+    }
+}
+
+struct GoogleLiveModelSettingsView: View {
+    @ObservedObject var providerManager = APIProviderManager.shared
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        List {
+            if providerManager.isLoadingGoogleLiveModels {
+                Section {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                }
+            } else {
+                if let error = providerManager.googleLiveModelsError {
+                    Section {
+                        Text(error)
+                            .foregroundColor(.red)
+                        Button("settings.model.retry".localized) {
+                            Task {
+                                await providerManager.fetchGoogleLiveModels()
+                            }
+                        }
+                    }
+                }
+                Section {
+                    ForEach(providerManager.googleLiveModels) { model in
+                        Button {
+                            providerManager.liveAIModel = model.id
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(model.displayName)
+                                        .foregroundColor(.primary)
+                                    Text(model.description)
+                                        .font(AppTypography.caption)
+                                        .foregroundColor(AppColors.textSecondary)
+                                    Text(model.id)
+                                        .font(.caption2)
+                                        .foregroundColor(AppColors.textSecondary)
+                                }
+                                Spacer()
+                                if providerManager.liveAIModel == model.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("settings.liveai.google.model.select".localized)
+                } footer: {
+                    Text("settings.liveai.google.model.description".localized)
+                }
+            }
+        }
+        .navigationTitle("settings.liveai.google.model".localized)
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await providerManager.fetchGoogleLiveModels()
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("done".localized) {
+                    dismiss()
+                }
+            }
         }
     }
 }
