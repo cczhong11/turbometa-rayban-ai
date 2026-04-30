@@ -153,10 +153,12 @@ class OmniRealtimeViewModel: ObservableObject {
 
         geminiService.onFirstAudioSent = { [weak self] in
             Task { @MainActor in
-                print("✅ [GeminiVM] 收到第一次音频发送回调，启用图片发送")
+                print("✅ [GeminiVM] 触发: 第一次音频已发送，准备启用图片发送...")
+                print("   当前 isImageSendingEnabled = \(self?.isImageSendingEnabled ?? false)")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     self?.isImageSendingEnabled = true
-                    print("📸 [GeminiVM] 图片发送已启用（语音触发模式）")
+                    print("✅ [GeminiVM] isImageSendingEnabled 已设为 true")
+                    print("   现在用户说话时会自动发送图片")
                 }
             }
         }
@@ -165,11 +167,18 @@ class OmniRealtimeViewModel: ObservableObject {
             Task { @MainActor in
                 self?.isSpeaking = true
 
-                if let strongSelf = self,
-                   strongSelf.isImageSendingEnabled,
-                   let frame = strongSelf.currentVideoFrame {
-                    print("🎤📸 [GeminiVM] 检测到用户语音，发送当前视频帧")
+                guard let strongSelf = self else {
+                    print("❌ [GeminiVM] onSpeechStarted: self 已释放")
+                    return
+                }
+                
+                print("🎤 [GeminiVM] 用户开始说话 - isImageSendingEnabled=\(strongSelf.isImageSendingEnabled), hasFrame=\(strongSelf.currentVideoFrame != nil)")
+                
+                if strongSelf.isImageSendingEnabled, let frame = strongSelf.currentVideoFrame {
+                    print("🎤📸 [GeminiVM] ✅ 条件满足，发送当前视频帧")
                     strongSelf.geminiService?.sendImageInput(frame)
+                } else {
+                    print("⚠️ [GeminiVM] 跳过图片发送 - enabled=\(strongSelf.isImageSendingEnabled), frame=\(strongSelf.currentVideoFrame != nil ? "YES" : "NO")")
                 }
             }
         }
@@ -319,6 +328,9 @@ class OmniRealtimeViewModel: ObservableObject {
 
     func updateVideoFrame(_ frame: UIImage) {
         currentVideoFrame = frame
+        if Int.random(in: 0..<30) == 0 {  // 每30帧打印一次，避免日志刷屏
+            print("🎥 [GeminiVM] 收到视频帧: \(frame.size)")
+        }
     }
 
     // MARK: - Manual Mode (if needed)
