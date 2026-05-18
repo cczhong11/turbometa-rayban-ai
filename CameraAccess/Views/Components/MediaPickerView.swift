@@ -22,19 +22,38 @@ struct MediaPickerView: UIViewControllerRepresentable {
     case image
   }
 
+  enum Source {
+    case photoLibrary
+    case camera
+  }
+
   let mode: MediaType
+  let source: Source
   let onMediaSelected: (URL, MediaType) -> Void
+
+  init(
+    mode: MediaType,
+    source: Source = .photoLibrary,
+    onMediaSelected: @escaping (URL, MediaType) -> Void
+  ) {
+    self.mode = mode
+    self.source = source
+    self.onMediaSelected = onMediaSelected
+  }
 
   func makeUIViewController(context: Context) -> UIImagePickerController {
     let picker = UIImagePickerController()
     picker.delegate = context.coordinator
-    picker.sourceType = .photoLibrary
+    picker.sourceType = source == .camera ? .camera : .photoLibrary
     switch mode {
     case .video:
       picker.mediaTypes = ["public.movie"]
       picker.videoExportPreset = AVAssetExportPresetHEVCHighestQuality
     case .image:
       picker.mediaTypes = ["public.image"]
+    }
+    if picker.sourceType == .camera {
+      picker.cameraCaptureMode = mode == .image ? .photo : .video
     }
     picker.allowsEditing = false
     return picker

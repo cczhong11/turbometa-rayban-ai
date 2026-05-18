@@ -57,6 +57,8 @@
 	<string>Needed to connect to Meta AI Glasses</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>TurboMeta 需要日历权限以支持系统级提醒、快捷能力和相关扩展功能。</string>
+	<key>NSCameraUsageDescription</key>
+	<string>TurboMeta 需要访问相机以拍摄书页图片并进行 OCR 和总结。</string>
 	<key>NSContactsUsageDescription</key>
 	<string>TurboMeta 需要通讯录权限以兼容系统级联系人能力和相关扩展功能。</string>
 	<key>NSMicrophoneUsageDescription</key>

@@ -266,7 +266,9 @@ struct BookSummaryWorkspaceView: View {
     @State private var showBookPicker = false
     @State private var showNewBookSheet = false
     @State private var selectedImage: UIImage?
+    @State private var pickerSource: MediaPickerView.Source = .photoLibrary
     @State private var showMediaPicker = false
+    @State private var shouldAutoSummarizeAfterPick = false
     @State private var isProcessing = false
     @State private var ocrText = ""
     @State private var summary = ""
@@ -298,9 +300,10 @@ struct BookSummaryWorkspaceView: View {
                 }
             }
             .sheet(isPresented: $showMediaPicker) {
-                MediaPickerView(mode: .image) { url, _ in
+                MediaPickerView(mode: .image, source: pickerSource) { url, _ in
                     selectedImage = UIImage(contentsOfFile: url.path)
                     didSave = false
+                    shouldAutoSummarizeAfterPick = pickerSource == .camera
                 }
             }
             .sheet(isPresented: $showNewBookSheet) {
@@ -313,6 +316,13 @@ struct BookSummaryWorkspaceView: View {
                     selectedBook = preselectedBook
                 } else if selectedBook == nil {
                     selectedBook = store.books.first
+                }
+            }
+            .onChange(of: selectedImage) { _, newImage in
+                guard newImage != nil, shouldAutoSummarizeAfterPick else { return }
+                shouldAutoSummarizeAfterPick = false
+                Task {
+                    await summarizeSelectedImage()
                 }
             }
             .alert("提示", isPresented: Binding(
@@ -384,16 +394,36 @@ struct BookSummaryWorkspaceView: View {
                     .cornerRadius(AppCornerRadius.lg)
             }
 
-            Button {
-                showMediaPicker = true
-            } label: {
-                Text(selectedImage == nil ? "从相册选择" : "重新选择图片")
-                    .font(AppTypography.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(Color(hex: "426B69"))
-                    .cornerRadius(AppCornerRadius.lg)
+            HStack(spacing: AppSpacing.sm) {
+                Button {
+                    pickerSource = .photoLibrary
+                    showMediaPicker = true
+                } label: {
+                    Text(selectedImage == nil ? "从相册选择" : "相册重选")
+                        .font(AppTypography.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppSpacing.md)
+                        .background(Color(hex: "426B69"))
+                        .cornerRadius(AppCornerRadius.lg)
+                }
+
+                Button {
+                    guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+                        errorMessage = "当前设备不支持拍照。"
+                        return
+                    }
+                    pickerSource = .camera
+                    showMediaPicker = true
+                } label: {
+                    Label("拍照选择", systemImage: "camera.fill")
+                        .font(AppTypography.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppSpacing.md)
+                        .background(Color(hex: "7D6B5D"))
+                        .cornerRadius(AppCornerRadius.lg)
+                }
             }
         }
     }
