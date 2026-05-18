@@ -12,10 +12,12 @@
 		26664DE8308E3F2981609421 /* QuickVisionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3E36CE337855A7F17F2AC8 /* QuickVisionService.swift */; };
 		2746170F50E225008AB717CE /* QuickVisionModeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A08DC107E5A57DDE6036C3 /* QuickVisionModeManager.swift */; };
 		2D194F19524B5A74AAA4F325 /* GeminiLiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EB4C91D8E0C8AC944DF95A /* GeminiLiveService.swift */; };
+		B00100010001000100010003 /* ChatReplyWorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100010001000100010004 /* ChatReplyWorkspaceView.swift */; };
 		3121D19C06DC68008799365A /* LiveAIIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C0ECA1D14EBBE33F66EEF18 /* LiveAIIntent.swift */; };
 		4B69CCC32F050D4300D1D025 /* RTMPStreamingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69CCC22F050D4300D1D025 /* RTMPStreamingView.swift */; };
 		4B69CCC52F050D5200D1D025 /* RTMPStreamingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69CCC42F050D5200D1D025 /* RTMPStreamingViewModel.swift */; };
 		4B69CCC72F050D5D00D1D025 /* RTMPStreamingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69CCC62F050D5D00D1D025 /* RTMPStreamingService.swift */; };
+		B00100010001000100010001 /* BookLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100010001000100010002 /* BookLibraryView.swift */; };
 		4B69CCCA2F050E0000D1D025 /* HaishinKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4B69CCC92F050E0000D1D025 /* HaishinKit */; };
 		4B69CCCC2F050E0000D1D025 /* RTMPHaishinKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4B69CCCB2F050E0000D1D025 /* RTMPHaishinKit */; };
 		4BA57AC32EF8227E002EC214 /* ConversationDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BA57AAC2EF8227E002EC214 /* ConversationDetailView.swift */; };
@@ -129,6 +131,8 @@
 		4B69CCC22F050D4300D1D025 /* RTMPStreamingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTMPStreamingView.swift; sourceTree = "<group>"; };
 		4B69CCC42F050D5200D1D025 /* RTMPStreamingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTMPStreamingViewModel.swift; sourceTree = "<group>"; };
 		4B69CCC62F050D5D00D1D025 /* RTMPStreamingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTMPStreamingService.swift; sourceTree = "<group>"; };
+		B00100010001000100010002 /* BookLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookLibraryView.swift; sourceTree = "<group>"; };
+		B00100010001000100010004 /* ChatReplyWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatReplyWorkspaceView.swift; sourceTree = "<group>"; };
 		4BA57A872EF8227E002EC214 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
 		4BA57A8A2EF8227E002EC214 /* ConversationRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationRecord.swift; sourceTree = "<group>"; };
 		4BA57A8B2EF8227E002EC214 /* FoodNutritionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodNutritionModel.swift; sourceTree = "<group>"; };
@@ -362,7 +366,9 @@
 				4BA57AA72EF8227E002EC214 /* Components */,
 				4BA57AAB2EF8227E002EC214 /* MockDeviceKit */,
 				4BA57AAC2EF8227E002EC214 /* ConversationDetailView.swift */,
+				B00100010001000100010004 /* ChatReplyWorkspaceView.swift */,
 				4BA57AAD2EF8227E002EC214 /* DebugMenuView.swift */,
+				B00100010001000100010002 /* BookLibraryView.swift */,
 				4BA57AAE2EF8227E002EC214 /* GalleryView.swift */,
 				4BA57AAF2EF8227E002EC214 /* HomeScreenView.swift */,
 				4BA57AB02EF8227E002EC214 /* LeanEatView.swift */,
@@ -468,6 +474,7 @@
 				4A4A4A4A4A4A4A4A4A4A4A4A /* Frameworks */,
 				BBBBBBBBBBBBBBBBBBBBBB /* Resources */,
 				8FD96B932E6F0C6E00F56AB1 /* Embed Frameworks */,
+				D5A10000123456789ABCDE01 /* Generate Meta Wearables dSYMs */,
 			);
 			buildRules = (
 			);
@@ -560,6 +567,27 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		D5A10000123456789ABCDE01 /* Generate Meta Wearables dSYMs */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Meta Wearables dSYMs";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$SRCROOT/scripts/generate_meta_wearables_dsyms.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		AAAAAAAAAAAAAAAAAAAAAA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -613,6 +641,8 @@
 				4BA57AEA2EF8227E002EC214 /* OmniRealtimeViewModel.swift in Sources */,
 				4BA57AEB2EF8227E002EC214 /* GalleryView.swift in Sources */,
 				4BA57AEC2EF8227E002EC214 /* MockDeviceCardView.swift in Sources */,
+				B00100010001000100010003 /* ChatReplyWorkspaceView.swift in Sources */,
+				B00100010001000100010001 /* BookLibraryView.swift in Sources */,
 				4BA57AED2EF8227E002EC214 /* TurboMetaHomeView.swift in Sources */,
 				4BA57AEE2EF8227E002EC214 /* OmniRealtimeService.swift in Sources */,
 				4BA57AEF2EF8227E002EC214 /* HomeScreenView.swift in Sources */,
@@ -721,7 +751,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CameraAccess/TurboMeta.entitlements;
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -735,7 +765,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.4.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.smartview.glassai.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tczhong.glassai.app1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -749,16 +779,19 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WWK6LCZ458;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.smartview.glassai.appTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tczhong.glassai.app1Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -777,16 +810,19 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WWK6LCZ458;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.smartview.glassai.appTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tczhong.glassai.app1Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

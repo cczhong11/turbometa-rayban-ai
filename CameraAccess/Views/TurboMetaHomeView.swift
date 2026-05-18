@@ -1,6 +1,6 @@
 /*
  * TurboMeta Home View
- * 主页 - 功能入口
+ * 精简后的主页 - 保留 Live AI，新增读书和聊天入口
  */
 
 import SwiftUI
@@ -8,27 +8,21 @@ import SwiftUI
 struct TurboMetaHomeView: View {
     @ObservedObject var streamViewModel: StreamSessionViewModel
     @ObservedObject var wearablesViewModel: WearablesViewModel
-    @StateObject private var quickVisionManager = QuickVisionManager.shared
     @StateObject private var liveAIManager = LiveAIManager.shared
     let apiKey: String
 
     @State private var showLiveAI = false
-    @State private var showLiveStream = false
-    @State private var showRTMPStreaming = false
-    @State private var showLeanEat = false
-    @State private var showQuickVision = false
-    @State private var showLiveTranslate = false
-    @State private var showOpenClaw = false
-    @ObservedObject private var openClawService = OpenClawNodeService.shared
+    @State private var showBookLibrary = false
+    @State private var showChatReplyWorkspace = false
 
     var body: some View {
         NavigationView {
             ZStack {
-                // Background gradient
                 LinearGradient(
                     colors: [
-                        AppColors.primary.opacity(0.1),
-                        AppColors.secondary.opacity(0.1)
+                        Color(hex: "F3EEE7"),
+                        Color(hex: "EEF5F1"),
+                        Color.white
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -36,149 +30,116 @@ struct TurboMetaHomeView: View {
                 .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: AppSpacing.lg) {
-                        // Header
-                        VStack(spacing: AppSpacing.sm) {
-                            Text("app.name".localized)
-                                .font(AppTypography.largeTitle)
-                                .foregroundColor(AppColors.textPrimary)
+                    VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                        headerSection
 
-                            Text("app.subtitle".localized)
-                                .font(AppTypography.callout)
-                                .foregroundColor(AppColors.textSecondary)
-                        }
-                        .padding(.top, AppSpacing.xl)
-
-                        // Feature Grid
                         VStack(spacing: AppSpacing.md) {
-                            // Row 1
+                            FeatureCardWide(
+                                title: "Live AI",
+                                subtitle: streamViewModel.hasActiveDevice ? "保留现有眼镜实时对话能力" : "保留入口，未连接眼镜时会提示",
+                                icon: "waveform.badge.mic",
+                                gradient: [Color(hex: "355C7D"), Color(hex: "6C5B7B")]
+                            ) {
+                                showLiveAI = true
+                            }
+
                             HStack(spacing: AppSpacing.md) {
                                 FeatureCard(
-                                    title: "home.liveai.title".localized,
-                                    subtitle: "home.liveai.subtitle".localized,
-                                    icon: "brain.head.profile",
-                                    gradient: [AppColors.liveAI, AppColors.liveAI.opacity(0.7)]
+                                    title: "书页总结",
+                                    subtitle: "iPhone OCR + Gemini",
+                                    icon: "books.vertical.fill",
+                                    gradient: [Color(hex: "7D6B5D"), Color(hex: "B08968")]
                                 ) {
-                                    showLiveAI = true
+                                    showBookLibrary = true
                                 }
 
                                 FeatureCard(
-                                    title: "home.quickvision.title".localized,
-                                    subtitle: "home.quickvision.subtitle".localized,
-                                    icon: "eye.circle.fill",
-                                    gradient: [Color.purple, Color.purple.opacity(0.7)]
+                                    title: "聊天回复",
+                                    subtitle: "截图分析和建议",
+                                    icon: "bubble.left.and.bubble.right.fill",
+                                    gradient: [Color(hex: "426B69"), Color(hex: "6A9C89")]
                                 ) {
-                                    showQuickVision = true
+                                    showChatReplyWorkspace = true
                                 }
-                            }
-
-                            // Row 2
-                            HStack(spacing: AppSpacing.md) {
-                                FeatureCard(
-                                    title: "home.translate.title".localized,
-                                    subtitle: "home.translate.subtitle".localized,
-                                    icon: "globe",
-                                    gradient: [Color.teal, Color.teal.opacity(0.7)]
-                                ) {
-                                    showLiveTranslate = true
-                                }
-
-                                FeatureCard(
-                                    title: "OpenClaw",
-                                    subtitle: openClawService.connectionState == .connected ? "home.openclaw.connected".localized : "home.openclaw.subtitle".localized,
-                                    icon: "link.circle.fill",
-                                    gradient: [Color.purple, Color.indigo]
-                                ) {
-                                    showOpenClaw = true
-                                }
-                            }
-
-                            // Row 3 - RTMP Streaming (Experimental)
-                            FeatureCardWide(
-                                title: "home.rtmp.title".localized,
-                                subtitle: "home.rtmp.subtitle".localized,
-                                icon: "antenna.radiowaves.left.and.right",
-                                gradient: [Color.red, Color.orange],
-                                badge: "home.experimental".localized
-                            ) {
-                                showRTMPStreaming = true
-                            }
-
-                            // Row 4 - Screen Recording Stream
-                            FeatureCardWide(
-                                title: "home.livestream.title".localized,
-                                subtitle: "home.livestream.subtitle".localized,
-                                icon: "video.fill",
-                                gradient: [AppColors.liveStream, AppColors.liveStream.opacity(0.7)]
-                            ) {
-                                showLiveStream = true
-                            }
-
-                            // Row 5 - LeanEat
-                            FeatureCardWide(
-                                title: "home.leaneat.title".localized,
-                                subtitle: "home.leaneat.subtitle".localized,
-                                icon: "chart.bar.fill",
-                                gradient: [AppColors.leanEat, AppColors.leanEat.opacity(0.7)]
-                            ) {
-                                showLeanEat = true
                             }
                         }
-                        .padding(.horizontal, AppSpacing.lg)
-                        .padding(.bottom, AppSpacing.xl)
+
+                        focusSection
                     }
+                    .padding(AppSpacing.lg)
                 }
             }
             .navigationBarHidden(true)
             .fullScreenCover(isPresented: $showLiveAI) {
                 LiveAIView(streamViewModel: streamViewModel, apiKey: apiKey)
             }
-            .fullScreenCover(isPresented: $showLiveStream) {
-                SimpleLiveStreamView(streamViewModel: streamViewModel)
+            .fullScreenCover(isPresented: $showBookLibrary) {
+                BookLibraryView()
             }
-            .fullScreenCover(isPresented: $showRTMPStreaming) {
-                RTMPStreamingView(streamViewModel: streamViewModel)
-            }
-            .fullScreenCover(isPresented: $showLeanEat) {
-                StreamView(viewModel: streamViewModel, wearablesVM: wearablesViewModel)
-            }
-            .fullScreenCover(isPresented: $showQuickVision) {
-                QuickVisionView(streamViewModel: streamViewModel, apiKey: apiKey)
-            }
-            .fullScreenCover(isPresented: $showLiveTranslate) {
-                LiveTranslateView(streamViewModel: streamViewModel)
-            }
-            .fullScreenCover(isPresented: $showOpenClaw) {
-                OpenClawChatView(streamViewModel: streamViewModel)
+            .fullScreenCover(isPresented: $showChatReplyWorkspace) {
+                ChatReplyWorkspaceView()
             }
         }
         .onAppear {
-            // 确保 QuickVisionManager 有 streamViewModel 引用
-            quickVisionManager.setStreamViewModel(streamViewModel)
-            // 确保 LiveAIManager 有 streamViewModel 引用
             liveAIManager.setStreamViewModel(streamViewModel)
-
-            // OpenClaw 自动连接（如果有保存的配置）
-            if openClawService.connectionState == .disconnected,
-               openClawService.loadGatewayToken() != nil {
-                openClawService.connect()
-            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .liveAITriggered)) { _ in
-            // 从快捷指令触发，自动打开 Live AI 界面
             showLiveAI = true
+        }
+    }
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text("TurboMeta")
+                .font(AppTypography.largeTitle)
+                .foregroundColor(AppColors.textPrimary)
+
+            Text("先保留 Live AI，再把读书和聊天这两个新功能接进来。")
+                .font(AppTypography.callout)
+                .foregroundColor(AppColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.top, AppSpacing.md)
+    }
+
+    private var focusSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text("当前重点")
+                .font(AppTypography.headline)
+                .foregroundColor(AppColors.textPrimary)
+
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                HomeInfoRow(icon: "checkmark.circle.fill", text: "保留现有 Live AI，不重开新 app")
+                HomeInfoRow(icon: "text.viewfinder", text: "书页功能走 iPhone 自带 OCR")
+                HomeInfoRow(icon: "sparkles", text: "OCR 后只走 Gemini text-to-text")
+            }
+            .padding(AppSpacing.md)
+            .background(Color.white.opacity(0.95))
+            .cornerRadius(AppCornerRadius.lg)
         }
     }
 }
 
-// MARK: - Feature Card
+struct HomeInfoRow: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: AppSpacing.sm) {
+            Image(systemName: icon)
+                .foregroundColor(Color(hex: "426B69"))
+            Text(text)
+                .font(AppTypography.subheadline)
+                .foregroundColor(AppColors.textPrimary)
+        }
+    }
+}
 
 struct FeatureCard: View {
     let title: String
     let subtitle: String
     let icon: String
     let gradient: [Color]
-    var isPlaceholder: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -186,10 +147,9 @@ struct FeatureCard: View {
             VStack(spacing: AppSpacing.md) {
                 Spacer()
 
-                // Icon
                 ZStack {
                     Circle()
-                        .fill(.white.opacity(0.2))
+                        .fill(.white.opacity(0.18))
                         .frame(width: 56, height: 56)
 
                     Image(systemName: icon)
@@ -197,7 +157,6 @@ struct FeatureCard: View {
                         .foregroundColor(.white)
                 }
 
-                // Text
                 VStack(spacing: AppSpacing.xs) {
                     Text(title)
                         .font(AppTypography.headline)
@@ -205,17 +164,7 @@ struct FeatureCard: View {
 
                     Text(subtitle)
                         .font(AppTypography.caption)
-                        .foregroundColor(.white.opacity(0.8))
-                }
-
-                if isPlaceholder {
-                    Text("home.comingsoon".localized)
-                        .font(AppTypography.caption)
-                        .foregroundColor(.white.opacity(0.9))
-                        .padding(.horizontal, AppSpacing.md)
-                        .padding(.vertical, AppSpacing.xs)
-                        .background(.white.opacity(0.2))
-                        .cornerRadius(AppCornerRadius.sm)
+                        .foregroundColor(.white.opacity(0.85))
                 }
 
                 Spacer()
@@ -223,37 +172,28 @@ struct FeatureCard: View {
             .frame(maxWidth: .infinity)
             .frame(height: 180)
             .background(
-                LinearGradient(
-                    colors: gradient,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                LinearGradient(colors: gradient, startPoint: .topLeading, endPoint: .bottomTrailing)
             )
             .cornerRadius(AppCornerRadius.lg)
             .shadow(color: AppShadow.medium(), radius: 10, x: 0, y: 5)
         }
-        .disabled(isPlaceholder)
         .buttonStyle(ScaleButtonStyle())
     }
 }
-
-// MARK: - Feature Card Wide
 
 struct FeatureCardWide: View {
     let title: String
     let subtitle: String
     let icon: String
     let gradient: [Color]
-    var badge: String? = nil
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: AppSpacing.lg) {
-                // Icon
                 ZStack {
                     Circle()
-                        .fill(.white.opacity(0.2))
+                        .fill(.white.opacity(0.18))
                         .frame(width: 64, height: 64)
 
                     Image(systemName: icon)
@@ -261,43 +201,24 @@ struct FeatureCardWide: View {
                         .foregroundColor(.white)
                 }
 
-                // Text
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    HStack(spacing: AppSpacing.sm) {
-                        Text(title)
-                            .font(AppTypography.title2)
-                            .foregroundColor(.white)
-
-                        if let badge = badge {
-                            Text(badge)
-                                .font(.caption2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.white.opacity(0.25))
-                                .cornerRadius(4)
-                        }
-                    }
+                    Text(title)
+                        .font(AppTypography.title2)
+                        .foregroundColor(.white)
 
                     Text(subtitle)
                         .font(AppTypography.subheadline)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.white.opacity(0.85))
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.7))
             }
             .padding(AppSpacing.lg)
             .background(
-                LinearGradient(
-                    colors: gradient,
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+                LinearGradient(colors: gradient, startPoint: .leading, endPoint: .trailing)
             )
             .cornerRadius(AppCornerRadius.lg)
             .shadow(color: AppShadow.medium(), radius: 10, x: 0, y: 5)
@@ -306,12 +227,10 @@ struct FeatureCardWide: View {
     }
 }
 
-// MARK: - Scale Button Style
-
 struct ScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.18), value: configuration.isPressed)
     }
 }

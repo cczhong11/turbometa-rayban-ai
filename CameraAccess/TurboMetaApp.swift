@@ -33,13 +33,7 @@ struct TurboMetaApp: App {
   @StateObject private var wearablesViewModel: WearablesViewModel
 
   init() {
-    do {
-      try Wearables.configure()
-      print("✅ [TurboMeta] Wearables SDK configured successfully")
-    } catch {
-      print("❌ [TurboMeta] Wearables.configure() failed: \(error) | \(error.localizedDescription)")
-    }
-    let wearables = Wearables.shared
+    let wearables = Self.makeWearables()
     self.wearables = wearables
     self._wearablesViewModel = StateObject(wrappedValue: WearablesViewModel(wearables: wearables))
   }
@@ -48,7 +42,7 @@ struct TurboMetaApp: App {
     WindowGroup {
       // Main app view with access to the shared Wearables SDK instance
       // The Wearables.shared singleton provides the core DAT API
-      MainAppView(wearables: Wearables.shared, viewModel: wearablesViewModel)
+      MainAppView(wearables: wearables, viewModel: wearablesViewModel)
         // Show error alerts for view model failures
         .alert("Error", isPresented: $wearablesViewModel.showError) {
           Button("OK") {
@@ -68,7 +62,86 @@ struct TurboMetaApp: App {
         #endif
 
       // Registration view handles the flow for connecting to the glasses via Meta AI
-      RegistrationView(viewModel: wearablesViewModel)
+      RegistrationView(wearables: wearables, viewModel: wearablesViewModel)
     }
+  }
+
+  private static func makeWearables() -> WearablesInterface {
+    if isRunningTests && ProcessInfo.processInfo.environment["FORCE_DAT_STREAM_SESSION"] != "1" {
+      print("🧪 [TurboMeta] Running under tests, using NoopWearables host")
+      return NoopWearables()
+    }
+
+    do {
+      try Wearables.configure()
+      print("✅ [TurboMeta] Wearables SDK configured successfully")
+      return Wearables.shared
+    } catch {
+      print("❌ [TurboMeta] Wearables.configure() failed: \(error) | \(error.localizedDescription)")
+      return NoopWearables()
+    }
+  }
+
+  private static var isRunningTests: Bool {
+    ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+      || NSClassFromString("XCTestCase") != nil
+  }
+}
+
+private struct NoopListenerToken: AnyListenerToken {
+  func cancel() async {}
+}
+
+final class NoopWearables: WearablesInterface, @unchecked Sendable {
+  var registrationState: RegistrationState { .available }
+  var devices: [DeviceIdentifier] { [] }
+
+  func addRegistrationStateListener(_ listener: @escaping @Sendable (RegistrationState) -> Void) -> any AnyListenerToken {
+    listener(registrationState)
+    return NoopListenerToken()
+  }
+
+  func registrationStateStream() -> AsyncStream<RegistrationState> {
+    AsyncStream { continuation in
+      continuation.yield(registrationState)
+      continuation.finish()
+    }
+  }
+
+  func startRegistration() async throws(RegistrationError) {}
+
+  func handleUrl(_ url: URL) async throws(WearablesHandleURLError) -> Bool {
+    false
+  }
+
+  func startUnregistration() async throws(UnregistrationError) {}
+
+  func addDevicesListener(_ listener: @escaping @Sendable ([DeviceIdentifier]) -> Void) -> any AnyListenerToken {
+    listener(devices)
+    return NoopListenerToken()
+  }
+
+  func devicesStream() -> AsyncStream<[DeviceIdentifier]> {
+    AsyncStream { continuation in
+      continuation.yield(devices)
+      continuation.finish()
+    }
+  }
+
+  func deviceForIdentifier(_ identifier: DeviceIdentifier) -> Device? {
+    nil
+  }
+
+  func checkPermissionStatus(_ permission: Permission) async throws(PermissionError) -> PermissionStatus {
+    .denied
+  }
+
+  func requestPermission(_ permission: Permission) async throws(PermissionError) -> PermissionStatus {
+    .denied
+  }
+
+  func addDeviceSessionStateListener(forDeviceId deviceId: DeviceIdentifier, listener: @escaping @Sendable (SessionState) -> Void) async -> any AnyListenerToken {
+    listener(.stopped)
+    return NoopListenerToken()
   }
 }

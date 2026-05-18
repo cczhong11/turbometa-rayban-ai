@@ -54,7 +54,7 @@ class StreamSessionViewModel: ObservableObject {
   private var timerTask: Task<Void, Never>?
   // The core DAT SDK StreamSession - handles all streaming operations
   // IMPORTANT: SDK requires ONE session instance, reused with start()/stop()
-  private var streamSession: StreamSession
+  private var streamSession: StreamSession?
   // Listener tokens are used to manage DAT SDK event subscriptions
   private var stateListenerToken: AnyListenerToken?
   private var videoFrameListenerToken: AnyListenerToken?
@@ -64,9 +64,14 @@ class StreamSessionViewModel: ObservableObject {
   private let deviceSelector: AutoDeviceSelector
   private var deviceMonitorTask: Task<Void, Never>?
   private var isProcessingFrame = false
+  private let isRunningTests: Bool
+  private let supportsStreamingSession: Bool
 
-  init(wearables: WearablesInterface) {
+  init(wearables: WearablesInterface, supportsStreamingSession: Bool = true) {
     self.wearables = wearables
+    self.isRunningTests = ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
+      || NSClassFromString("XCTestCase") != nil
+    self.supportsStreamingSession = supportsStreamingSession
     logger.info("🟢 StreamSessionViewModel init")
     // Let the SDK auto-select from available devices
     self.deviceSelector = AutoDeviceSelector(wearables: wearables)
@@ -85,11 +90,20 @@ class StreamSessionViewModel: ObservableObject {
     logger.info("🟢 Using video quality: \(savedQuality) -> \(String(describing: resolution))")
 
     // Create ONE session at init - SDK pattern requires reusing same session
+    if (!supportsStreamingSession) || (isRunningTests && ProcessInfo.processInfo.environment["FORCE_DAT_STREAM_SESSION"] != "1") {
+      streamSession = nil
+      hasActiveDevice = false
+      streamingStatus = .stopped
+      logger.info("🧪 StreamSessionViewModel skipping DAT stream session setup")
+      return
+    }
+
     let config = StreamSessionConfig(
       videoCodec: VideoCodec.raw,
       resolution: resolution,
       frameRate: 24)
-    streamSession = StreamSession(streamSessionConfig: config, deviceSelector: deviceSelector)
+    let streamSession = StreamSession(streamSessionConfig: config, deviceSelector: deviceSelector)
+    self.streamSession = streamSession
     logger.info("🟢 StreamSession created")
 
     // Monitor device availability
@@ -154,6 +168,10 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func handleStartStreaming() async {
+    guard supportsStreamingSession else {
+      showError("当前环境不可用 Live AI 流媒体，请连接可用的 DAT 设备后再试。")
+      return
+    }
     logger.info("▶️ handleStartStreaming called")
     let permission = Permission.camera
     do {
@@ -177,6 +195,10 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func startSession() async {
+    guard let streamSession else {
+      logger.info("🧪 startSession skipped because DAT stream session is unavailable in tests")
+      return
+    }
     logger.info("🚀 startSession START")
 
     // Reset to unlimited time when starting a new stream
@@ -198,6 +220,11 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func stopSession() async {
+    guard let streamSession else {
+      logger.info("🧪 stopSession skipped because DAT stream session is unavailable in tests")
+      stopTimer()
+      return
+    }
     logger.info("⏹️ stopSession START")
     stopTimer()
     await streamSession.stop()
@@ -221,7 +248,7 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func capturePhoto() {
-    streamSession.capturePhoto(format: .jpeg)
+    streamSession?.capturePhoto(format: .jpeg)
   }
 
   func dismissPhotoPreview() {
@@ -293,7 +320,9 @@ class StreamSessionViewModel: ObservableObject {
     stopTimer()
     deviceMonitorTask?.cancel()
     deviceMonitorTask = nil
-    await streamSession.stop()
+    if let streamSession {
+      await streamSession.stop()
+    }
     // Clear listeners
     stateListenerToken = nil
     videoFrameListenerToken = nil

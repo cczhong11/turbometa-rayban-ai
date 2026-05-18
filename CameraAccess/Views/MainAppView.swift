@@ -28,38 +28,30 @@ struct MainAppView: View {
   init(wearables: WearablesInterface, viewModel: WearablesViewModel) {
     self.wearables = wearables
     self.viewModel = viewModel
-    self._streamViewModel = StateObject(wrappedValue: StreamSessionViewModel(wearables: wearables))
+    self._streamViewModel = StateObject(
+      wrappedValue: StreamSessionViewModel(
+        wearables: wearables,
+        supportsStreamingSession: !(wearables is NoopWearables)))
   }
 
   var body: some View {
-    if viewModel.registrationState == .registered || viewModel.hasMockDevice {
-      // 已注册/连接设备
-      if !hasCheckedPermissions {
-        // 首次启动，请求权限
-        PermissionsRequestView { granted in
-          permissionsGranted = granted
-          hasCheckedPermissions = true
-        }
-      } else {
-        // 权限已检查，显示主界面
-        MainTabView(streamViewModel: streamViewModel, wearablesViewModel: viewModel)
-          .onAppear {
-            // 设置 QuickVisionManager 的 StreamViewModel 引用
-            quickVisionManager.setStreamViewModel(streamViewModel)
-
-            // 设置 OpenClaw Node 命令路由
-            let router = OpenClawCommandRouter(streamViewModel: streamViewModel)
-            OpenClawNodeService.shared.setCommandRouter(router)
-
-            // 如果之前启用了 OpenClaw，自动重连
-            if OpenClawNodeService.shared.isEnabled {
-              OpenClawNodeService.shared.connect()
-            }
-          }
+    if !hasCheckedPermissions {
+      PermissionsRequestView { granted in
+        permissionsGranted = granted
+        hasCheckedPermissions = true
       }
     } else {
-      // 未注册 - 显示注册/引导流程
-      HomeScreenView(viewModel: viewModel)
+      MainTabView(streamViewModel: streamViewModel, wearablesViewModel: viewModel)
+        .onAppear {
+          quickVisionManager.setStreamViewModel(streamViewModel)
+
+          let router = OpenClawCommandRouter(streamViewModel: streamViewModel)
+          OpenClawNodeService.shared.setCommandRouter(router)
+
+          if OpenClawNodeService.shared.isEnabled {
+            OpenClawNodeService.shared.connect()
+          }
+        }
     }
   }
 }

@@ -18,6 +18,7 @@ import MWDATCore
 import SwiftUI
 
 struct RegistrationView: View {
+  let wearables: WearablesInterface
   @ObservedObject var viewModel: WearablesViewModel
 
   var body: some View {
@@ -36,7 +37,7 @@ struct RegistrationView: View {
           do {
             // Pass the callback URL to the DAT SDK for processing
             // This handles registration completion and permission grant responses
-            _ = try await Wearables.shared.handleUrl(url)
+            _ = try await wearables.handleUrl(url)
           } catch let error as RegistrationError {
             viewModel.showError(error.description)
           } catch {

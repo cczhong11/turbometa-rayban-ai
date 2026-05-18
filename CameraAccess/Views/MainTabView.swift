@@ -18,28 +18,24 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            // Home - Feature entry
             TurboMetaHomeView(streamViewModel: streamViewModel, wearablesViewModel: wearablesViewModel, apiKey: apiKey)
                 .tabItem {
                     Label("tab.home".localized, systemImage: "house.fill")
                 }
                 .tag(0)
 
-            // Records
-            RecordsView()
+            BookLibraryView()
                 .tabItem {
-                    Label("tab.records".localized, systemImage: "list.bullet.rectangle")
+                    Label("读书", systemImage: "books.vertical.fill")
                 }
                 .tag(1)
 
-            // Gallery
-            GalleryView()
+            ChatReplyWorkspaceView()
                 .tabItem {
-                    Label("tab.gallery".localized, systemImage: "photo.on.rectangle")
+                    Label("聊天", systemImage: "bubble.left.and.bubble.right.fill")
                 }
                 .tag(2)
 
-            // Settings
             SettingsView(streamViewModel: streamViewModel, apiKey: apiKey)
                 .tabItem {
                     Label("tab.settings".localized, systemImage: "person.fill")

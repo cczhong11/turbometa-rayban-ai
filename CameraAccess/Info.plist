@@ -55,10 +55,20 @@
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Needed to connect to Meta AI Glasses</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>TurboMeta 需要日历权限以支持系统级提醒、快捷能力和相关扩展功能。</string>
+	<key>NSContactsUsageDescription</key>
+	<string>TurboMeta 需要通讯录权限以兼容系统级联系人能力和相关扩展功能。</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>TurboMeta 需要访问麦克风以实现与智能眼镜的实时语音对话功能。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>TurboMeta 需要访问相册以选择书页照片和聊天截图进行分析。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>TurboMeta 需要访问相册以保存从智能眼镜拍摄的照片。</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>TurboMeta 需要提醒事项权限以兼容系统级提醒能力和相关扩展功能。</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>TurboMeta 需要提醒事项权限以兼容系统级提醒能力和相关扩展功能。</string>
 	<key>NSSiriUsageDescription</key>
 	<string>TurboMeta 需要 Siri 权限以支持语音快捷指令触发快速识图功能。</string>
 	<key>UIApplicationSceneManifest</key>

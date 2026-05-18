@@ -22,6 +22,10 @@ class ViewModelIntegrationTests: XCTestCase {
 
   override func setUp() async throws {
     try await super.setUp()
+    guard ProcessInfo.processInfo.environment["RUN_DAT_INTEGRATION_TESTS"] == "1" else {
+      throw XCTSkip("DAT integration tests are opt-in. Set RUN_DAT_INTEGRATION_TESTS=1 to run device streaming coverage.")
+    }
+    setenv("FORCE_DAT_STREAM_SESSION", "1", 1)
     try? Wearables.configure()
 
     // Pair mock device and set up camera kit
@@ -38,6 +42,7 @@ class ViewModelIntegrationTests: XCTestCase {
   }
 
   override func tearDown() async throws {
+    unsetenv("FORCE_DAT_STREAM_SESSION")
     MockDeviceKit.shared.pairedDevices.forEach { mockDevice in
       MockDeviceKit.shared.unpairDevice(mockDevice)
     }
