@@ -114,7 +114,7 @@ struct ChatReplyWorkspaceView: View {
                             .foregroundColor(AppColors.textSecondary)
                     }
                     .padding(AppSpacing.md)
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(AppCornerRadius.md)
                 }
 
@@ -146,7 +146,7 @@ struct ChatReplyWorkspaceView: View {
                         .foregroundColor(AppColors.textSecondary)
                         .padding(AppSpacing.md)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white)
+                        .background(AppColors.cardBackground)
                         .cornerRadius(AppCornerRadius.md)
                 } else {
                     VStack(spacing: AppSpacing.sm) {
@@ -170,7 +170,7 @@ struct ChatReplyWorkspaceView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 320)
                     .frame(maxWidth: .infinity)
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(AppCornerRadius.lg)
             }
 
@@ -220,7 +220,7 @@ struct ChatReplyWorkspaceView: View {
                     .foregroundColor(didSave ? Color(hex: "2F6B3D") : AppColors.textPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppSpacing.md)
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(AppCornerRadius.lg)
             }
             .disabled(!canSave)
@@ -588,7 +588,7 @@ struct SuggestionListCard: View {
                 }
             }
             .padding(AppSpacing.md)
-            .background(Color.white)
+            .background(AppColors.cardBackground)
             .cornerRadius(AppCornerRadius.lg)
         }
     }
@@ -617,7 +617,7 @@ struct ChatHistoryCard: View {
         }
         .padding(AppSpacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(AppColors.cardBackground)
         .cornerRadius(AppCornerRadius.md)
     }
 }

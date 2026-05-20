@@ -20,9 +20,9 @@ struct TurboMetaHomeView: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        Color(hex: "F3EEE7"),
-                        Color(hex: "EEF5F1"),
-                        Color.white
+                        AppColors.warmCanvasTop,
+                        AppColors.warmCanvasMiddle,
+                        AppColors.warmCanvasBottom
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -114,7 +114,7 @@ struct TurboMetaHomeView: View {
                 HomeInfoRow(icon: "sparkles", text: "OCR 后只走 Gemini text-to-text")
             }
             .padding(AppSpacing.md)
-            .background(Color.white.opacity(0.95))
+            .background(AppColors.subtleOverlay)
             .cornerRadius(AppCornerRadius.lg)
         }
     }

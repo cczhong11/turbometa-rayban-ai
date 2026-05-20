@@ -14,9 +14,9 @@ struct BookLibraryView: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        Color(hex: "F6F1E8"),
-                        Color(hex: "E8F0E8"),
-                        Color.white
+                        AppColors.warmCanvasTop,
+                        AppColors.warmCanvasMiddle,
+                        AppColors.warmCanvasBottom
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -361,7 +361,7 @@ struct BookSummaryWorkspaceView: View {
                             .foregroundColor(AppColors.textSecondary)
                     }
                     .padding(AppSpacing.md)
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(AppCornerRadius.md)
                 }
 
@@ -390,7 +390,7 @@ struct BookSummaryWorkspaceView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 280)
                     .frame(maxWidth: .infinity)
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(AppCornerRadius.lg)
             }
 
@@ -460,7 +460,7 @@ struct BookSummaryWorkspaceView: View {
                     .foregroundColor(didSave ? Color(hex: "2F6B3D") : AppColors.textPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppSpacing.md)
-                    .background(Color.white)
+                    .background(AppColors.cardBackground)
                     .cornerRadius(AppCornerRadius.lg)
             }
             .disabled(!canSave)
@@ -492,7 +492,7 @@ struct BookSummaryWorkspaceView: View {
                             }
                         }
                         .padding(AppSpacing.md)
-                        .background(Color.white)
+                        .background(AppColors.cardBackground)
                         .cornerRadius(AppCornerRadius.lg)
                     }
                 }
@@ -624,7 +624,7 @@ struct BookCard: View {
         }
         .padding(AppSpacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(AppColors.cardBackground)
         .cornerRadius(AppCornerRadius.lg)
         .shadow(color: AppShadow.small(), radius: 6, x: 0, y: 3)
     }
@@ -679,7 +679,7 @@ struct BookSummaryRecordCard: View {
             }
         }
         .padding(AppSpacing.md)
-        .background(Color.white)
+        .background(AppColors.cardBackground)
         .cornerRadius(AppCornerRadius.lg)
     }
 }
@@ -699,7 +699,7 @@ struct ResultCard: View {
                 .foregroundColor(AppColors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(AppSpacing.md)
-                .background(Color.white)
+                .background(AppColors.cardBackground)
                 .cornerRadius(AppCornerRadius.lg)
         }
     }

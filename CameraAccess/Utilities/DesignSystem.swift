@@ -22,13 +22,28 @@ struct AppColors {
     static let cardBackground = Color(.systemBackground)
     static let secondaryBackground = Color(.secondarySystemBackground)
     static let tertiaryBackground = Color(.tertiarySystemBackground)
+    static let elevatedBackground = Color(.systemBackground)
+    static let subtleOverlay = Color(.secondarySystemBackground).opacity(0.92)
 
     static let textPrimary = Color(.label)
     static let textSecondary = Color(.secondaryLabel)
     static let textTertiary = Color(.tertiaryLabel)
+
+    static let warmCanvasTop = Color(light: UIColor(red: 0.96, green: 0.93, blue: 0.89, alpha: 1),
+                                     dark: UIColor(red: 0.10, green: 0.10, blue: 0.12, alpha: 1))
+    static let warmCanvasMiddle = Color(light: UIColor(red: 0.91, green: 0.95, blue: 0.91, alpha: 1),
+                                        dark: UIColor(red: 0.12, green: 0.13, blue: 0.15, alpha: 1))
+    static let warmCanvasBottom = Color(light: UIColor.white,
+                                        dark: UIColor(red: 0.16, green: 0.17, blue: 0.20, alpha: 1))
 }
 
 extension Color {
+    init(light: UIColor, dark: UIColor) {
+        self.init(UIColor { traits in
+            traits.userInterfaceStyle == .dark ? dark : light
+        })
+    }
+
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
