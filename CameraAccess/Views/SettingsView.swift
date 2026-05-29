@@ -24,6 +24,7 @@ struct SettingsView: View {
     @State private var showLiveAISettings = false
     @State private var showLiveTranslateSettings = false
     @State private var showOpenClawSettings = false
+    @State private var showHomeCardSettings = false
     @ObservedObject var quickVisionModeManager = QuickVisionModeManager.shared
     @ObservedObject var liveAIModeManager = LiveAIModeManager.shared
     @State private var selectedModel = "qwen3-omni-flash-realtime"
@@ -220,6 +221,21 @@ struct SettingsView: View {
                                 .foregroundColor(AppColors.textTertiary)
                         }
                     }
+
+                    Button {
+                        showHomeCardSettings = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.grid.2x2.fill")
+                                .foregroundColor(AppColors.accent)
+                            Text("cardsettings.title".localized)
+                                .foregroundColor(AppColors.textPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(AppTypography.caption)
+                                .foregroundColor(AppColors.textTertiary)
+                        }
+                    }
                 } header: {
                     Text("settings.ai".localized)
                 }
@@ -389,6 +405,9 @@ struct SettingsView: View {
             .sheet(isPresented: $showQuickVisionSettings) {
                 QuickVisionSettingsView()
             }
+            .sheet(isPresented: $showHomeCardSettings) {
+                HomeCardSettingsView()
+            }
             .sheet(isPresented: $showLiveAISettings) {
                 LiveAISettingsView()
             }
@@ -459,6 +478,57 @@ struct InfoRow: View {
             Spacer()
             Text(value)
                 .font(AppTypography.body)
+                .foregroundColor(AppColors.textSecondary)
+        }
+    }
+}
+
+struct HomeCardSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("home.card.liveAI.visible") private var isLiveAIVisible = true
+    @AppStorage("home.card.bookSummary.visible") private var isBookSummaryVisible = true
+    @AppStorage("home.card.chatReply.visible") private var isChatReplyVisible = true
+
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    Toggle(isOn: $isLiveAIVisible) {
+                        settingsRow(for: .liveAI)
+                    }
+
+                    Toggle(isOn: $isBookSummaryVisible) {
+                        settingsRow(for: .bookSummary)
+                    }
+
+                    Toggle(isOn: $isChatReplyVisible) {
+                        settingsRow(for: .chatReply)
+                    }
+                } header: {
+                    Text("cardsettings.section.visible".localized)
+                } footer: {
+                    Text("cardsettings.section.footer".localized)
+                }
+            }
+            .navigationTitle("cardsettings.title".localized)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("done".localized) {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func settingsRow(for card: HomeCardType) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(card.title, systemImage: card.icon)
+                .foregroundColor(AppColors.textPrimary)
+            Text(card.description)
+                .font(AppTypography.caption)
                 .foregroundColor(AppColors.textSecondary)
         }
     }

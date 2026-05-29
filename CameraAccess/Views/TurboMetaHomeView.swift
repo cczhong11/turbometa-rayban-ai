@@ -5,6 +5,69 @@
 
 import SwiftUI
 
+enum HomeCardType: String, CaseIterable, Identifiable {
+    case liveAI
+    case bookSummary
+    case chatReply
+
+    var id: String { rawValue }
+
+    var visibilityKey: String {
+        switch self {
+        case .liveAI:
+            return "home.card.liveAI.visible"
+        case .bookSummary:
+            return "home.card.bookSummary.visible"
+        case .chatReply:
+            return "home.card.chatReply.visible"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .liveAI:
+            return "cardsettings.liveai.title".localized
+        case .bookSummary:
+            return "cardsettings.booksummary.title".localized
+        case .chatReply:
+            return "cardsettings.chatreply.title".localized
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .liveAI:
+            return "cardsettings.liveai.description".localized
+        case .bookSummary:
+            return "cardsettings.booksummary.description".localized
+        case .chatReply:
+            return "cardsettings.chatreply.description".localized
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .liveAI:
+            return "waveform.badge.mic"
+        case .bookSummary:
+            return "books.vertical.fill"
+        case .chatReply:
+            return "bubble.left.and.bubble.right.fill"
+        }
+    }
+
+    var gradient: [Color] {
+        switch self {
+        case .liveAI:
+            return [Color(hex: "355C7D"), Color(hex: "6C5B7B")]
+        case .bookSummary:
+            return [Color(hex: "7D6B5D"), Color(hex: "B08968")]
+        case .chatReply:
+            return [Color(hex: "426B69"), Color(hex: "6A9C89")]
+        }
+    }
+}
+
 struct TurboMetaHomeView: View {
     @ObservedObject var streamViewModel: StreamSessionViewModel
     @ObservedObject var wearablesViewModel: WearablesViewModel
@@ -14,6 +77,9 @@ struct TurboMetaHomeView: View {
     @State private var showLiveAI = false
     @State private var showBookLibrary = false
     @State private var showChatReplyWorkspace = false
+    @AppStorage("home.card.liveAI.visible") private var isLiveAIVisible = true
+    @AppStorage("home.card.bookSummary.visible") private var isBookSummaryVisible = true
+    @AppStorage("home.card.chatReply.visible") private var isChatReplyVisible = true
 
     var body: some View {
         NavigationView {
@@ -34,34 +100,7 @@ struct TurboMetaHomeView: View {
                         headerSection
 
                         VStack(spacing: AppSpacing.md) {
-                            FeatureCardWide(
-                                title: "Live AI",
-                                subtitle: streamViewModel.hasActiveDevice ? "保留现有眼镜实时对话能力" : "保留入口，未连接眼镜时会提示",
-                                icon: "waveform.badge.mic",
-                                gradient: [Color(hex: "355C7D"), Color(hex: "6C5B7B")]
-                            ) {
-                                showLiveAI = true
-                            }
-
-                            HStack(spacing: AppSpacing.md) {
-                                FeatureCard(
-                                    title: "书页总结",
-                                    subtitle: "iPhone OCR + Gemini",
-                                    icon: "books.vertical.fill",
-                                    gradient: [Color(hex: "7D6B5D"), Color(hex: "B08968")]
-                                ) {
-                                    showBookLibrary = true
-                                }
-
-                                FeatureCard(
-                                    title: "聊天回复",
-                                    subtitle: "截图分析和建议",
-                                    icon: "bubble.left.and.bubble.right.fill",
-                                    gradient: [Color(hex: "426B69"), Color(hex: "6A9C89")]
-                                ) {
-                                    showChatReplyWorkspace = true
-                                }
-                            }
+                            homeCardsSection
                         }
 
                         focusSection
@@ -86,6 +125,65 @@ struct TurboMetaHomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: .liveAITriggered)) { _ in
             showLiveAI = true
         }
+    }
+
+    @ViewBuilder
+    private var homeCardsSection: some View {
+        if isLiveAIVisible {
+            FeatureCardWide(
+                title: HomeCardType.liveAI.title,
+                subtitle: streamViewModel.hasActiveDevice ? "cardsettings.liveai.connected".localized : "cardsettings.liveai.disconnected".localized,
+                icon: HomeCardType.liveAI.icon,
+                gradient: HomeCardType.liveAI.gradient
+            ) {
+                showLiveAI = true
+            }
+        }
+
+        let visibleSecondaryCards = secondaryCards.filter(\.isVisible)
+
+        if visibleSecondaryCards.count == 2 {
+            HStack(spacing: AppSpacing.md) {
+                ForEach(visibleSecondaryCards) { card in
+                    FeatureCard(
+                        title: card.type.title,
+                        subtitle: card.subtitle,
+                        icon: card.type.icon,
+                        gradient: card.type.gradient,
+                        action: card.action
+                    )
+                }
+            }
+        } else if let card = visibleSecondaryCards.first {
+            FeatureCardWide(
+                title: card.type.title,
+                subtitle: card.subtitle,
+                icon: card.type.icon,
+                gradient: card.type.gradient,
+                action: card.action
+            )
+        }
+
+        if !isLiveAIVisible && visibleSecondaryCards.isEmpty {
+            HiddenCardsPlaceholderView()
+        }
+    }
+
+    private var secondaryCards: [HomeCardConfig] {
+        [
+            HomeCardConfig(
+                type: .bookSummary,
+                subtitle: HomeCardType.bookSummary.description,
+                isVisible: isBookSummaryVisible,
+                action: { showBookLibrary = true }
+            ),
+            HomeCardConfig(
+                type: .chatReply,
+                subtitle: HomeCardType.chatReply.description,
+                isVisible: isChatReplyVisible,
+                action: { showChatReplyWorkspace = true }
+            )
+        ]
     }
 
     private var headerSection: some View {
@@ -117,6 +215,34 @@ struct TurboMetaHomeView: View {
             .background(AppColors.subtleOverlay)
             .cornerRadius(AppCornerRadius.lg)
         }
+    }
+}
+
+struct HomeCardConfig: Identifiable {
+    let type: HomeCardType
+    let subtitle: String
+    let isVisible: Bool
+    let action: () -> Void
+
+    var id: HomeCardType { type }
+}
+
+struct HiddenCardsPlaceholderView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Label("cardsettings.hidden.placeholder.title".localized, systemImage: "eye.slash")
+                .font(AppTypography.headline)
+                .foregroundColor(AppColors.textPrimary)
+
+            Text("cardsettings.hidden.placeholder.subtitle".localized)
+                .font(AppTypography.subheadline)
+                .foregroundColor(AppColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppSpacing.lg)
+        .background(AppColors.subtleOverlay)
+        .cornerRadius(AppCornerRadius.lg)
     }
 }
 
