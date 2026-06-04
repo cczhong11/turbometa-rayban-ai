@@ -1,109 +1,184 @@
 /*
  * Food Nutrition Model
- * 食物营养数据模型
+ * Food v2 API 数据模型
  */
 
 import Foundation
 
-// MARK: - Food Nutrition Response
+struct FoodAnalyzeAndSaveResponse: Codable {
+    let status: String
+    let data: FoodAnalysisResult
+}
 
-struct FoodNutritionResponse: Codable {
-    let foods: [FoodItem]
-    let totalCalories: Int
-    let totalProtein: Double
-    let totalFat: Double
-    let totalCarbs: Double
-    let healthScore: Int
-    let suggestions: [String]
+struct FoodLogsResponse: Codable {
+    let status: String
+    let data: [FoodLogEntry]
+}
+
+struct FoodAnalysisResult: Codable {
+    let photoURL: String?
+    let timestamp: String
+    let mealType: String
+    let userNote: String?
+    let analysis: FoodAnalysisMetadata
+    let savedItems: [FoodLogEntry]
 
     enum CodingKeys: String, CodingKey {
-        case foods
-        case totalCalories = "total_calories"
-        case totalProtein = "total_protein"
-        case totalFat = "total_fat"
-        case totalCarbs = "total_carbs"
-        case healthScore = "health_score"
-        case suggestions
+        case photoURL = "photo_url"
+        case timestamp
+        case mealType = "meal_type"
+        case userNote = "user_note"
+        case analysis
+        case savedItems = "saved_items"
     }
 }
 
-// MARK: - Food Item
+struct FoodAnalysisMetadata: Codable {
+    let model: String?
+    let reasoning: String?
+    let items: [FoodAnalysisItem]
+}
 
-struct FoodItem: Codable, Identifiable {
-    let id = UUID()
+struct FoodAnalysisItem: Codable, Identifiable, Hashable {
+    var id: String {
+        "\(name)-\(servingSize ?? 0)-\(calories ?? 0)"
+    }
+
     let name: String
-    let portion: String
-    let calories: Int
-    let protein: Double
-    let fat: Double
-    let carbs: Double
-    let fiber: Double?
-    let sugar: Double?
-    let healthRating: String
+    let calories: Double?
+    let protein: Double?
+    let fat: Double?
+    let carbohydrates: Double?
+    let servingSize: Double?
 
     enum CodingKeys: String, CodingKey {
         case name
-        case portion
         case calories
         case protein
         case fat
-        case carbs
-        case fiber
-        case sugar
-        case healthRating = "health_rating"
+        case carbohydrates
+        case servingSize = "serving_size"
+    }
+}
+
+struct FoodLogEntry: Codable, Identifiable, Hashable {
+    let id: String
+    let date: String?
+    let timestamp: String?
+    let photoURL: String?
+    let foodName: String?
+    let cal: Double?
+    let protein: Double?
+    let fat: Double?
+    let carbohydrates: Double?
+    let mealType: String?
+    let weight: Int?
+    let existingFoodID: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case date
+        case timestamp
+        case photoURL = "photo_url"
+        case foodName = "food_name"
+        case cal
+        case protein
+        case fat
+        case carbohydrates
+        case mealType = "meal_type"
+        case weight
+        case existingFoodID = "existing_food_id"
+    }
+}
+
+extension FoodAnalysisResult {
+    var totalCalories: Int {
+        Int(savedItems.reduce(0) { $0 + ($1.cal ?? 0) }.rounded())
     }
 
-    var healthRatingEmoji: String {
-        switch healthRating {
-        case "优秀": return "🟢"
-        case "良好": return "🟡"
-        case "一般": return "🟠"
-        case "较差": return "🔴"
-        default: return "⚪️"
+    var totalProtein: Double {
+        savedItems.reduce(0) { $0 + ($1.protein ?? 0) }
+    }
+
+    var totalFat: Double {
+        savedItems.reduce(0) { $0 + ($1.fat ?? 0) }
+    }
+
+    var totalCarbohydrates: Double {
+        savedItems.reduce(0) { $0 + ($1.carbohydrates ?? 0) }
+    }
+
+    var displayMealType: String {
+        FoodMealType(rawValue: mealType)?.displayName ?? mealType
+    }
+
+    var timestampDate: Date? {
+        timestamp.iso8601Date
+    }
+}
+
+extension FoodLogEntry {
+    var displayName: String {
+        foodName ?? "未命名食物"
+    }
+
+    var displayMealType: String {
+        FoodMealType(rawValue: mealType ?? "")?.displayName ?? (mealType ?? "未分类")
+    }
+
+    var displayCalories: String {
+        "\(Int((cal ?? 0).rounded())) 千卡"
+    }
+
+    var displayWeight: String? {
+        guard let weight else { return nil }
+        return "\(weight) g"
+    }
+
+    var timestampDate: Date? {
+        timestamp?.iso8601Date
+    }
+}
+
+enum FoodMealType: String, CaseIterable, Identifiable {
+    case breakfast
+    case lunch
+    case dinner
+    case snack
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .breakfast: return "早餐"
+        case .lunch: return "午餐"
+        case .dinner: return "晚餐"
+        case .snack: return "加餐"
         }
     }
 }
 
-// MARK: - Nutrition Summary
-
-extension FoodNutritionResponse {
-    var formattedTotalCalories: String {
-        "\(totalCalories) 千卡"
-    }
-
-    var formattedTotalProtein: String {
-        String(format: "%.1f g", totalProtein)
-    }
-
-    var formattedTotalFat: String {
-        String(format: "%.1f g", totalFat)
-    }
-
-    var formattedTotalCarbs: String {
-        String(format: "%.1f g", totalCarbs)
-    }
-
-    var healthScoreColor: String {
-        if healthScore >= 80 {
-            return "green"
-        } else if healthScore >= 60 {
-            return "yellow"
-        } else if healthScore >= 40 {
-            return "orange"
-        } else {
-            return "red"
+extension String {
+    var iso8601Date: Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: self) {
+            return date
         }
+
+        formatter.formatOptions = [.withInternetDateTime]
+        if let date = formatter.date(from: self) {
+            return date
+        }
+
+        return Self.localTimestampFormatter.date(from: self)
     }
 
-    var healthScoreText: String {
-        if healthScore >= 80 {
-            return "非常健康"
-        } else if healthScore >= 60 {
-            return "比较健康"
-        } else if healthScore >= 40 {
-            return "一般"
-        } else {
-            return "需要改善"
-        }
-    }
+    private static let localTimestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter
+    }()
 }

@@ -8,9 +8,8 @@ import SwiftUI
 
 @MainActor
 class LeanEatViewModel: ObservableObject {
-    // Published properties
     @Published var isAnalyzing = false
-    @Published var nutritionData: FoodNutritionResponse?
+    @Published var analysisResult: FoodAnalysisResult?
     @Published var errorMessage: String?
 
     private let service: LeanEatService
@@ -21,18 +20,16 @@ class LeanEatViewModel: ObservableObject {
         self.service = LeanEatService(apiKey: apiKey)
     }
 
-    // MARK: - Public Methods
-
     func analyzeFood() async {
         isAnalyzing = true
         errorMessage = nil
-        nutritionData = nil
+        analysisResult = nil
 
         do {
-            print("🍎 [LeanEat] 开始分析食物营养...")
-            let result = try await service.analyzeFood(photo)
-            nutritionData = result
-            print("✅ [LeanEat] 分析完成: \(result.foods.count) 种食物")
+            print("🍎 [LeanEat] 调用 food v2 analyze-and-save...")
+            let result = try await service.analyzeAndSaveFood(photo)
+            analysisResult = result
+            print("✅ [LeanEat] 已保存 \(result.savedItems.count) 条 food log")
         } catch {
             errorMessage = error.localizedDescription
             print("❌ [LeanEat] 分析失败: \(error)")
@@ -46,7 +43,7 @@ class LeanEatViewModel: ObservableObject {
     }
 
     func clear() {
-        nutritionData = nil
+        analysisResult = nil
         errorMessage = nil
     }
 }

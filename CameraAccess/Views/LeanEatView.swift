@@ -1,6 +1,6 @@
 /*
  * LeanEat View
- * 食物营养分析界面
+ * 调用 food v2 API 分析并写入 food log
  */
 
 import SwiftUI
@@ -22,78 +22,65 @@ struct LeanEatView: View {
                 AppColors.secondaryBackground
                     .ignoresSafeArea()
 
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: AppSpacing.lg) {
-                        // Photo section
-                        photoSection
+                        Image(uiImage: photo)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 260)
+                            .cornerRadius(AppCornerRadius.lg)
+                            .shadow(color: AppShadow.medium(), radius: 8, x: 0, y: 4)
 
                         if viewModel.isAnalyzing {
                             analyzingView
                         } else if let error = viewModel.errorMessage {
                             errorView(error)
-                        } else if let nutrition = viewModel.nutritionData {
-                            nutritionResultView(nutrition)
-                        } else {
-                            analyzePromptView
+                        } else if let result = viewModel.analysisResult {
+                            resultView(result)
                         }
                     }
                     .padding()
                 }
             }
-            .navigationTitle("LeanEat 营养分析")
+            .navigationTitle("营养分析")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("关闭") {
                         dismiss()
                     }
                 }
             }
         }
         .task {
-            // Auto-analyze on appear
-            if viewModel.nutritionData == nil && viewModel.errorMessage == nil {
+            if viewModel.analysisResult == nil && viewModel.errorMessage == nil {
                 await viewModel.analyzeFood()
             }
         }
     }
 
-    // MARK: - Photo Section
-
-    private var photoSection: some View {
-        Image(uiImage: photo)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(maxHeight: 250)
-            .cornerRadius(AppCornerRadius.lg)
-            .shadow(color: AppShadow.medium(), radius: 8, x: 0, y: 4)
-    }
-
-    // MARK: - Analyzing View
-
     private var analyzingView: some View {
         VStack(spacing: AppSpacing.lg) {
             ProgressView()
-                .scaleEffect(1.5)
+                .scaleEffect(1.4)
                 .tint(AppColors.leanEat)
 
-            Text("AI正在分析食物营养...")
+            Text("正在分析并写入 food log")
                 .font(AppTypography.headline)
                 .foregroundColor(AppColors.textPrimary)
 
-            Text("请稍候，这可能需要几秒钟")
-                .font(AppTypography.caption)
+            Text("图片会上传到你的后端，由 food v2 API 识别后直接写库。")
+                .font(AppTypography.subheadline)
                 .foregroundColor(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
         }
         .padding(.vertical, AppSpacing.xl)
     }
 
-    // MARK: - Error View
-
     private func errorView(_ error: String) -> some View {
-        VStack(spacing: AppSpacing.lg) {
+        VStack(spacing: AppSpacing.md) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 60))
+                .font(.system(size: 56))
                 .foregroundColor(.orange)
 
             Text("分析失败")
@@ -104,320 +91,178 @@ struct LeanEatView: View {
                 .font(AppTypography.body)
                 .foregroundColor(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal)
 
             Button {
                 Task {
                     await viewModel.retry()
                 }
             } label: {
-                HStack {
-                    Image(systemName: "arrow.clockwise")
-                    Text("重试")
-                }
-                .font(AppTypography.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.md)
-                .background(AppColors.leanEat)
-                .cornerRadius(AppCornerRadius.lg)
-            }
-            .padding(.horizontal, AppSpacing.xl)
-        }
-        .padding(.vertical, AppSpacing.xl)
-    }
-
-    // MARK: - Analyze Prompt View
-
-    private var analyzePromptView: some View {
-        VStack(spacing: AppSpacing.lg) {
-            Image(systemName: "chart.bar.doc.horizontal.fill")
-                .font(.system(size: 60))
-                .foregroundColor(AppColors.leanEat)
-
-            Text("开始分析")
-                .font(AppTypography.title2)
-                .foregroundColor(AppColors.textPrimary)
-
-            Text("点击下方按钮开始分析食物营养")
-                .font(AppTypography.body)
-                .foregroundColor(AppColors.textSecondary)
-
-            Button {
-                Task {
-                    await viewModel.analyzeFood()
-                }
-            } label: {
-                HStack {
-                    Image(systemName: "sparkles")
-                    Text("开始分析")
-                }
-                .font(AppTypography.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.md)
-                .background(
-                    LinearGradient(
-                        colors: [AppColors.leanEat, AppColors.leanEat.opacity(0.8)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .cornerRadius(AppCornerRadius.lg)
-            }
-            .padding(.horizontal, AppSpacing.xl)
-        }
-        .padding(.vertical, AppSpacing.xl)
-    }
-
-    // MARK: - Nutrition Result View
-
-    private func nutritionResultView(_ nutrition: FoodNutritionResponse) -> some View {
-        VStack(spacing: AppSpacing.lg) {
-            // Health Score Card
-            healthScoreCard(nutrition)
-
-            // Total Nutrition Summary
-            totalNutritionCard(nutrition)
-
-            // Food Items List
-            foodItemsList(nutrition.foods)
-
-            // Health Suggestions
-            if !nutrition.suggestions.isEmpty {
-                suggestionsCard(nutrition.suggestions)
+                Text("重试")
+                    .font(AppTypography.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.md)
+                    .background(AppColors.leanEat)
+                    .cornerRadius(AppCornerRadius.lg)
             }
         }
+        .padding()
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppCornerRadius.xl)
     }
 
-    // MARK: - Health Score Card
-
-    private func healthScoreCard(_ nutrition: FoodNutritionResponse) -> some View {
+    private func resultView(_ result: FoodAnalysisResult) -> some View {
         VStack(spacing: AppSpacing.md) {
-            Text("健康评分")
-                .font(AppTypography.headline)
-                .foregroundColor(AppColors.textPrimary)
+            summaryCard(result)
 
-            ZStack {
-                Circle()
-                    .stroke(
-                        Color.gray.opacity(0.2),
-                        lineWidth: 15
-                    )
-                    .frame(width: 140, height: 140)
-
-                Circle()
-                    .trim(from: 0, to: CGFloat(nutrition.healthScore) / 100)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color(nutrition.healthScoreColor == "green" ? .green : nutrition.healthScoreColor == "yellow" ? .yellow : nutrition.healthScoreColor == "orange" ? .orange : .red),
-                                Color(nutrition.healthScoreColor == "green" ? .green : nutrition.healthScoreColor == "yellow" ? .yellow : nutrition.healthScoreColor == "orange" ? .orange : .red).opacity(0.6)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        style: StrokeStyle(lineWidth: 15, lineCap: .round)
-                    )
-                    .frame(width: 140, height: 140)
-                    .rotationEffect(.degrees(-90))
-
-                VStack(spacing: 4) {
-                    Text("\(nutrition.healthScore)")
-                        .font(.system(size: 48, weight: .bold))
+            if let reasoning = result.analysis.reasoning, !reasoning.isEmpty {
+                detailCard(title: "分析备注", systemImage: "text.quote") {
+                    Text(reasoning)
+                        .font(AppTypography.subheadline)
                         .foregroundColor(AppColors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
 
-                    Text(nutrition.healthScoreText)
-                        .font(AppTypography.caption)
-                        .foregroundColor(AppColors.textSecondary)
+            detailCard(title: "已保存条目", systemImage: "tray.full.fill") {
+                VStack(spacing: AppSpacing.sm) {
+                    ForEach(result.savedItems, id: \.id) { item in
+                        savedItemRow(item)
+                    }
                 }
             }
         }
-        .padding()
-        .background(AppColors.tertiaryBackground)
-        .cornerRadius(AppCornerRadius.xl)
-        .shadow(color: AppShadow.small(), radius: 4, x: 0, y: 2)
     }
 
-    // MARK: - Total Nutrition Card
-
-    private func totalNutritionCard(_ nutrition: FoodNutritionResponse) -> some View {
+    private func summaryCard(_ result: FoodAnalysisResult) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("总营养成分")
-                .font(AppTypography.headline)
-                .foregroundColor(AppColors.textPrimary)
-
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: AppSpacing.md) {
-                nutritionItem(
-                    icon: "flame.fill",
-                    title: "热量",
-                    value: nutrition.formattedTotalCalories,
-                    color: .orange
-                )
-
-                nutritionItem(
-                    icon: "leaf.fill",
-                    title: "蛋白质",
-                    value: nutrition.formattedTotalProtein,
-                    color: .green
-                )
-
-                nutritionItem(
-                    icon: "drop.fill",
-                    title: "脂肪",
-                    value: nutrition.formattedTotalFat,
-                    color: .yellow
-                )
-
-                nutritionItem(
-                    icon: "sparkles",
-                    title: "碳水",
-                    value: nutrition.formattedTotalCarbs,
-                    color: .blue
-                )
-            }
-        }
-        .padding()
-        .background(AppColors.tertiaryBackground)
-        .cornerRadius(AppCornerRadius.xl)
-        .shadow(color: AppShadow.small(), radius: 4, x: 0, y: 2)
-    }
-
-    private func nutritionItem(icon: String, title: String, value: String, color: Color) -> some View {
-        VStack(spacing: AppSpacing.sm) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-
-            Text(title)
-                .font(AppTypography.caption)
-                .foregroundColor(AppColors.textSecondary)
-
-            Text(value)
-                .font(AppTypography.headline)
-                .foregroundColor(AppColors.textPrimary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(AppColors.secondaryBackground)
-        .cornerRadius(AppCornerRadius.lg)
-    }
-
-    // MARK: - Food Items List
-
-    private func foodItemsList(_ foods: [FoodItem]) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("食物明细")
-                .font(AppTypography.headline)
-                .foregroundColor(AppColors.textPrimary)
-                .padding(.horizontal)
-
-            ForEach(foods) { food in
-                foodItemCard(food)
-            }
-        }
-    }
-
-    private func foodItemCard(_ food: FoodItem) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            // Food name and rating
-            HStack {
-                Text(food.healthRatingEmoji)
-                    .font(.title2)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(food.name)
-                        .font(AppTypography.headline)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text("已写入 food log")
+                        .font(AppTypography.title2)
                         .foregroundColor(AppColors.textPrimary)
 
-                    Text(food.portion)
-                        .font(AppTypography.caption)
+                    Text("\(result.displayMealType) · \(formattedDate(result.timestampDate))")
+                        .font(AppTypography.subheadline)
                         .foregroundColor(AppColors.textSecondary)
                 }
 
                 Spacer()
 
-                Text(food.healthRating)
-                    .font(AppTypography.caption)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, AppSpacing.sm)
-                    .padding(.vertical, 4)
-                    .background(
-                        food.healthRating == "优秀" ? Color.green :
-                        food.healthRating == "良好" ? Color.yellow :
-                        food.healthRating == "一般" ? Color.orange : Color.red
-                    )
-                    .cornerRadius(AppCornerRadius.sm)
+                Text("\(result.savedItems.count) 项")
+                    .font(AppTypography.headline)
+                    .foregroundColor(AppColors.leanEat)
             }
 
-            Divider()
+            HStack(spacing: AppSpacing.sm) {
+                macroPill(title: "热量", value: "\(result.totalCalories) 千卡", color: .orange)
+                macroPill(title: "蛋白质", value: String(format: "%.1f g", result.totalProtein), color: .green)
+            }
 
-            // Nutrition details
-            HStack(spacing: AppSpacing.lg) {
-                miniNutritionItem(icon: "flame.fill", value: "\(food.calories)", unit: "千卡", color: .orange)
-                miniNutritionItem(icon: "leaf.fill", value: String(format: "%.1f", food.protein), unit: "g", color: .green)
-                miniNutritionItem(icon: "drop.fill", value: String(format: "%.1f", food.fat), unit: "g", color: .yellow)
-                miniNutritionItem(icon: "sparkles", value: String(format: "%.1f", food.carbs), unit: "g", color: .blue)
+            HStack(spacing: AppSpacing.sm) {
+                macroPill(title: "脂肪", value: String(format: "%.1f g", result.totalFat), color: .yellow)
+                macroPill(title: "碳水", value: String(format: "%.1f g", result.totalCarbohydrates), color: .blue)
             }
         }
         .padding()
-        .background(AppColors.tertiaryBackground)
-        .cornerRadius(AppCornerRadius.lg)
-        .shadow(color: AppShadow.small(), radius: 4, x: 0, y: 2)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "FFF2E8"), Color.white],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(AppCornerRadius.xl)
     }
 
-    private func miniNutritionItem(icon: String, value: String, unit: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundColor(color)
-
-            HStack(spacing: 2) {
-                Text(value)
-                    .font(.system(size: 14, weight: .semibold))
-                Text(unit)
-                    .font(.system(size: 10))
-            }
-            .foregroundColor(AppColors.textPrimary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Suggestions Card
-
-    private func suggestionsCard(_ suggestions: [String]) -> some View {
+    private func detailCard<Content: View>(
+        title: String,
+        systemImage: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            HStack {
-                Image(systemName: "lightbulb.fill")
-                    .foregroundColor(AppColors.leanEat)
-                Text("营养建议")
-                    .font(AppTypography.headline)
-                    .foregroundColor(AppColors.textPrimary)
-            }
+            Label(title, systemImage: systemImage)
+                .font(AppTypography.headline)
+                .foregroundColor(AppColors.textPrimary)
 
-            ForEach(Array(suggestions.enumerated()), id: \.offset) { index, suggestion in
-                HStack(alignment: .top, spacing: AppSpacing.sm) {
-                    Text("\(index + 1).")
-                        .font(AppTypography.caption)
-                        .foregroundColor(AppColors.leanEat)
-                        .fontWeight(.bold)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(AppColors.cardBackground)
+        .cornerRadius(AppCornerRadius.xl)
+    }
 
-                    Text(suggestion)
-                        .font(AppTypography.body)
-                        .foregroundColor(AppColors.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+    private func savedItemRow(_ item: FoodLogEntry) -> some View {
+        HStack(alignment: .top, spacing: AppSpacing.md) {
+            AsyncImage(url: URL(string: item.photoURL ?? "")) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                default:
+                    ZStack {
+                        RoundedRectangle(cornerRadius: AppCornerRadius.md)
+                            .fill(AppColors.tertiaryBackground)
+                        Image(systemName: "fork.knife")
+                            .foregroundColor(AppColors.textSecondary)
+                    }
                 }
             }
+            .frame(width: 64, height: 64)
+            .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.md))
+
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(item.displayName)
+                    .font(AppTypography.headline)
+                    .foregroundColor(AppColors.textPrimary)
+
+                Text("\(item.displayMealType) · \(item.displayCalories)")
+                    .font(AppTypography.subheadline)
+                    .foregroundColor(AppColors.textSecondary)
+
+                Text(macroLine(for: item))
+                    .font(AppTypography.caption)
+                    .foregroundColor(AppColors.textSecondary)
+            }
+
+            Spacer()
         }
-        .padding()
-        .background(AppColors.leanEat.opacity(0.1))
-        .cornerRadius(AppCornerRadius.lg)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppCornerRadius.lg)
-                .stroke(AppColors.leanEat.opacity(0.3), lineWidth: 1)
-        )
     }
+
+    private func macroPill(title: String, value: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            Text(title)
+                .font(AppTypography.caption)
+                .foregroundColor(AppColors.textSecondary)
+            Text(value)
+                .font(AppTypography.headline)
+                .foregroundColor(color)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(color.opacity(0.08))
+        .cornerRadius(AppCornerRadius.lg)
+    }
+
+    private func macroLine(for item: FoodLogEntry) -> String {
+        let protein = String(format: "%.1f", item.protein ?? 0)
+        let fat = String(format: "%.1f", item.fat ?? 0)
+        let carbs = String(format: "%.1f", item.carbohydrates ?? 0)
+        let weight = item.displayWeight.map { " · \($0)" } ?? ""
+        return "P \(protein)g · F \(fat)g · C \(carbs)g\(weight)"
+    }
+
+    private func formattedDate(_ date: Date?) -> String {
+        guard let date else { return "刚刚" }
+        return Self.displayFormatter.string(from: date)
+    }
+
+    private static let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "M月d日 HH:mm"
+        return formatter
+    }()
 }

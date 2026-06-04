@@ -18,6 +18,7 @@
 		4B69CCC52F050D5200D1D025 /* RTMPStreamingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69CCC42F050D5200D1D025 /* RTMPStreamingViewModel.swift */; };
 		4B69CCC72F050D5D00D1D025 /* RTMPStreamingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69CCC62F050D5D00D1D025 /* RTMPStreamingService.swift */; };
 		B00100010001000100010001 /* BookLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100010001000100010002 /* BookLibraryView.swift */; };
+		B00100010001000100010005 /* FoodLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100010001000100010006 /* FoodLogView.swift */; };
 		4B69CCCA2F050E0000D1D025 /* HaishinKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4B69CCC92F050E0000D1D025 /* HaishinKit */; };
 		4B69CCCC2F050E0000D1D025 /* RTMPHaishinKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4B69CCCB2F050E0000D1D025 /* RTMPHaishinKit */; };
 		4BA57AC32EF8227E002EC214 /* ConversationDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BA57AAC2EF8227E002EC214 /* ConversationDetailView.swift */; };
@@ -165,6 +166,7 @@
 		4BA57AAE2EF8227E002EC214 /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
 		4BA57AAF2EF8227E002EC214 /* HomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreenView.swift; sourceTree = "<group>"; };
 		4BA57AB02EF8227E002EC214 /* LeanEatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeanEatView.swift; sourceTree = "<group>"; };
+		B00100010001000100010006 /* FoodLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodLogView.swift; sourceTree = "<group>"; };
 		4BA57AB12EF8227E002EC214 /* LiveAIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveAIView.swift; sourceTree = "<group>"; };
 		4BA57AB22EF8227E002EC214 /* MainAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainAppView.swift; sourceTree = "<group>"; };
 		4BA57AB32EF8227E002EC214 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -371,6 +373,7 @@
 				B00100010001000100010002 /* BookLibraryView.swift */,
 				4BA57AAE2EF8227E002EC214 /* GalleryView.swift */,
 				4BA57AAF2EF8227E002EC214 /* HomeScreenView.swift */,
+				B00100010001000100010006 /* FoodLogView.swift */,
 				4BA57AB02EF8227E002EC214 /* LeanEatView.swift */,
 				4BA57AB12EF8227E002EC214 /* LiveAIView.swift */,
 				4BA57AB22EF8227E002EC214 /* MainAppView.swift */,
@@ -643,6 +646,7 @@
 				4BA57AEC2EF8227E002EC214 /* MockDeviceCardView.swift in Sources */,
 				B00100010001000100010003 /* ChatReplyWorkspaceView.swift in Sources */,
 				B00100010001000100010001 /* BookLibraryView.swift in Sources */,
+				B00100010001000100010005 /* FoodLogView.swift in Sources */,
 				4BA57AED2EF8227E002EC214 /* TurboMetaHomeView.swift in Sources */,
 				4BA57AEE2EF8227E002EC214 /* OmniRealtimeService.swift in Sources */,
 				4BA57AEF2EF8227E002EC214 /* HomeScreenView.swift in Sources */,

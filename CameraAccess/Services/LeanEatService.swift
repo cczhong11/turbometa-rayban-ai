@@ -1,215 +1,189 @@
 /*
  * LeanEat Service
- * 食物营养分析AI服务
+ * Food v2 API 服务
  */
 
 import Foundation
 import UIKit
 
-class LeanEatService {
-    private let apiKey: String
-    private let baseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    private let model = "qwen3-vl-plus"
+final class LeanEatService {
+    private let baseURL = "https://api.tczhong.com/v2/food"
+    private let session: URLSession
 
-    init(apiKey: String) {
-        self.apiKey = apiKey
+    init(apiKey: String? = nil, session: URLSession = .shared) {
+        self.session = session
     }
 
-    // MARK: - API Request/Response Models
-
-    struct ChatCompletionRequest: Codable {
-        let model: String
-        let messages: [Message]
-
-        struct Message: Codable {
-            let role: String
-            let content: [Content]
-
-            struct Content: Codable {
-                let type: String
-                let text: String?
-                let imageUrl: ImageURL?
-
-                enum CodingKeys: String, CodingKey {
-                    case type
-                    case text
-                    case imageUrl = "image_url"
-                }
-
-                struct ImageURL: Codable {
-                    let url: String
-                }
-            }
-        }
-    }
-
-    struct ChatCompletionResponse: Codable {
-        let choices: [Choice]
-
-        struct Choice: Codable {
-            let message: Message
-
-            struct Message: Codable {
-                let content: String
-            }
-        }
-    }
-
-    // MARK: - Nutrition Analysis
-
-    func analyzeFood(_ image: UIImage) async throws -> FoodNutritionResponse {
-        // Convert image to base64
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+    func analyzeAndSaveFood(
+        _ image: UIImage,
+        timestamp: Date = Date(),
+        mealType: FoodMealType = .lunch,
+        userNote: String? = nil
+    ) async throws -> FoodAnalysisResult {
+        guard let imageData = image.jpegData(compressionQuality: 0.85) else {
             throw LeanEatError.invalidImage
         }
 
-        let base64String = imageData.base64EncodedString()
-        let dataURL = "data:image/jpeg;base64,\(base64String)"
-
-        // Create specialized nutrition analysis prompt
-        let nutritionPrompt = """
-你是一位专业的营养师AI。请分析图片中的食物，并返回纯JSON格式的营养信息。
-
-**严格要求：必须返回纯JSON格式，不要任何额外文字！**
-**重要：所有文字内容（包括name字段）必须用中文！**
-
-JSON格式如下：
-{
-  "foods": [
-    {
-      "name": "食物名称（中文）",
-      "portion": "份量（如：1碗、100克等）",
-      "calories": 热量数字（整数，单位：千卡）,
-      "protein": 蛋白质（浮点数，单位：克）,
-      "fat": 脂肪（浮点数，单位：克）,
-      "carbs": 碳水化合物（浮点数，单位：克）,
-      "fiber": 膳食纤维（浮点数，单位：克，可选）,
-      "sugar": 糖分（浮点数，单位：克，可选）,
-      "health_rating": "健康评级（优秀/良好/一般/较差）"
+        return try await analyzeAndSaveFood(
+            imageData: imageData,
+            timestamp: timestamp,
+            mealType: mealType,
+            userNote: userNote
+        )
     }
-  ],
-  "total_calories": 总热量（整数）,
-  "total_protein": 总蛋白质（浮点数）,
-  "total_fat": 总脂肪（浮点数）,
-  "total_carbs": 总碳水化合物（浮点数）,
-  "health_score": 健康评分（0-100整数）,
-  "suggestions": [
-    "营养建议1",
-    "营养建议2",
-    "营养建议3"
-  ]
-}
 
-请严格按照上述JSON格式返回，不要添加任何其他文字说明。
-"""
+    func analyzeAndSaveFood(
+        imageData: Data,
+        timestamp: Date = Date(),
+        mealType: FoodMealType = .lunch,
+        userNote: String? = nil
+    ) async throws -> FoodAnalysisResult {
+        guard !imageData.isEmpty else {
+            throw LeanEatError.invalidImage
+        }
 
-        // Create API request
-        let request = ChatCompletionRequest(
-            model: model,
-            messages: [
-                ChatCompletionRequest.Message(
-                    role: "user",
-                    content: [
-                        ChatCompletionRequest.Message.Content(
-                            type: "image_url",
-                            text: nil,
-                            imageUrl: ChatCompletionRequest.Message.Content.ImageURL(url: dataURL)
-                        ),
-                        ChatCompletionRequest.Message.Content(
-                            type: "text",
-                            text: nutritionPrompt,
-                            imageUrl: nil
-                        )
-                    ]
-                )
-            ]
+        let requestBody = AnalyzeAndSaveRequest(
+            photoBase64: "data:image/jpeg;base64,\(imageData.base64EncodedString())",
+            imageURL: nil,
+            timestamp: Self.iso8601Formatter.string(from: timestamp),
+            mealType: mealType.rawValue,
+            userNote: userNote
         )
 
-        // Make API call
-        let responseText = try await makeRequest(request)
+        var request = URLRequest(url: try endpoint("/analyze-and-save"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(requestBody)
 
-        // Parse JSON response
-        return try parseNutritionResponse(responseText)
+        let response: FoodAnalyzeAndSaveResponse = try await send(request)
+        return response.data
     }
 
-    // MARK: - Private Methods
+    func fetchLogs(
+        date: Date? = nil,
+        startDate: Date? = nil,
+        endDate: Date? = nil,
+        limit: Int = 100
+    ) async throws -> [FoodLogEntry] {
+        guard var components = URLComponents(url: try endpoint("/logs"), resolvingAgainstBaseURL: false) else {
+            throw LeanEatError.invalidResponse
+        }
 
-    private func makeRequest(_ request: ChatCompletionRequest) async throws -> String {
-        let url = URL(string: "\(baseURL)/chat/completions")!
+        var queryItems = [URLQueryItem(name: "limit", value: String(limit))]
+        if let date {
+            queryItems.append(URLQueryItem(name: "date", value: Self.dateFormatter.string(from: date)))
+        } else {
+            if let startDate {
+                queryItems.append(URLQueryItem(name: "start_date", value: Self.dateFormatter.string(from: startDate)))
+            }
+            if let endDate {
+                queryItems.append(URLQueryItem(name: "end_date", value: Self.dateFormatter.string(from: endDate)))
+            }
+        }
+        components.queryItems = queryItems
 
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        guard let url = components.url else {
+            throw LeanEatError.invalidResponse
+        }
 
-        let encoder = JSONEncoder()
-        urlRequest.httpBody = try encoder.encode(request)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
 
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        let response: FoodLogsResponse = try await send(request)
+        return response.data
+    }
+
+    func deleteLog(id: String) async throws {
+        var request = URLRequest(url: try endpoint("/logs/\(id)"))
+        request.httpMethod = "DELETE"
+        _ = try await send(request) as EmptyAPIResponse
+    }
+
+    private func endpoint(_ path: String) throws -> URL {
+        guard let url = URL(string: "\(baseURL)\(path)") else {
+            throw LeanEatError.invalidResponse
+        }
+        return url
+    }
+
+    private func send<T: Decodable>(_ request: URLRequest) async throws -> T {
+        let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LeanEatError.invalidResponse
         }
 
-        guard httpResponse.statusCode == 200 else {
-            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw LeanEatError.apiError(statusCode: httpResponse.statusCode, message: errorMessage)
+        guard 200..<300 ~= httpResponse.statusCode else {
+            let apiError = try? JSONDecoder().decode(APIErrorResponse.self, from: data)
+            throw LeanEatError.apiError(
+                statusCode: httpResponse.statusCode,
+                message: apiError?.message ?? String(data: data, encoding: .utf8) ?? "Unknown error"
+            )
         }
 
-        let decoder = JSONDecoder()
-        let apiResponse = try decoder.decode(ChatCompletionResponse.self, from: data)
-
-        guard let firstChoice = apiResponse.choices.first else {
-            throw LeanEatError.emptyResponse
-        }
-
-        return firstChoice.message.content
-    }
-
-    private func parseNutritionResponse(_ text: String) throws -> FoodNutritionResponse {
-        // Extract JSON from response (in case AI added extra text)
-        var jsonText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Try to find JSON object in the response
-        if let jsonStart = jsonText.range(of: "{"),
-           let jsonEnd = jsonText.range(of: "}", options: .backwards) {
-            jsonText = String(jsonText[jsonStart.lowerBound...jsonEnd.upperBound])
-        }
-
-        guard let jsonData = jsonText.data(using: .utf8) else {
-            throw LeanEatError.invalidJSON
-        }
-
-        let decoder = JSONDecoder()
         do {
-            return try decoder.decode(FoodNutritionResponse.self, from: jsonData)
+            return try JSONDecoder().decode(T.self, from: data)
         } catch {
-            print("❌ [LeanEat] JSON解析失败: \(error)")
-            print("📝 [LeanEat] 原始响应: \(text)")
-            throw LeanEatError.invalidJSON
+            throw LeanEatError.decodingFailed(error)
         }
     }
-}
 
-// MARK: - Error Types
+    private struct AnalyzeAndSaveRequest: Codable {
+        let photoBase64: String?
+        let imageURL: String?
+        let timestamp: String?
+        let mealType: String
+        let userNote: String?
+
+        enum CodingKeys: String, CodingKey {
+            case photoBase64 = "photo_base64"
+            case imageURL = "image_url"
+            case timestamp
+            case mealType = "meal_type"
+            case userNote = "user_note"
+        }
+    }
+
+    private struct APIErrorResponse: Decodable {
+        let status: String?
+        let message: String
+    }
+
+    private struct EmptyAPIResponse: Decodable {
+        let status: String?
+        let message: String?
+    }
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+}
 
 enum LeanEatError: LocalizedError {
     case invalidImage
-    case emptyResponse
     case invalidResponse
-    case invalidJSON
+    case decodingFailed(Error)
     case apiError(statusCode: Int, message: String)
 
     var errorDescription: String? {
         switch self {
         case .invalidImage:
             return "无法处理图片"
-        case .emptyResponse:
-            return "API 返回空响应"
         case .invalidResponse:
-            return "无效的响应格式"
-        case .invalidJSON:
-            return "无法解析营养数据，请重试"
+            return "服务响应无效"
+        case .decodingFailed:
+            return "无法解析服务返回的数据"
         case .apiError(let statusCode, let message):
             return "API 错误 (\(statusCode)): \(message)"
         }

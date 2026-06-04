@@ -36,11 +36,17 @@ struct MainTabView: View {
                 }
                 .tag(2)
 
+            FoodLogView()
+                .tabItem {
+                    Label("食物", systemImage: "fork.knife.circle.fill")
+                }
+                .tag(3)
+
             SettingsView(streamViewModel: streamViewModel, apiKey: apiKey)
                 .tabItem {
                     Label("tab.settings".localized, systemImage: "person.fill")
                 }
-                .tag(3)
+                .tag(4)
         }
         .accentColor(AppColors.primary)
     }
