@@ -18,9 +18,9 @@ struct FoodLogView: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        Color(hex: "FFF6ED"),
-                        Color(hex: "F7FBF5"),
-                        Color.white
+                        AppColors.warmCanvasTop,
+                        AppColors.warmCanvasMiddle,
+                        AppColors.warmCanvasBottom
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -130,7 +130,7 @@ struct FoodLogView: View {
                             .foregroundColor(selectedRange == range ? .white : AppColors.textPrimary)
                             .padding(.horizontal, AppSpacing.md)
                             .padding(.vertical, 10)
-                            .background(selectedRange == range ? Color(hex: "2D6A4F") : Color.white.opacity(0.75))
+                            .background(selectedRange == range ? Color(hex: "2D6A4F") : AppColors.subtleOverlay)
                             .cornerRadius(AppCornerRadius.xl)
                     }
                     .buttonStyle(.plain)
@@ -158,7 +158,7 @@ struct FoodLogView: View {
             }
         }
         .padding()
-        .background(Color.white.opacity(0.8))
+        .background(AppColors.elevatedBackground.opacity(0.92))
         .cornerRadius(AppCornerRadius.xl)
     }
 
@@ -190,7 +190,7 @@ struct FoodLogView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color.white.opacity(0.8))
+        .background(AppColors.elevatedBackground.opacity(0.92))
         .cornerRadius(AppCornerRadius.xl)
     }
 
@@ -286,7 +286,7 @@ private struct FoodLogRow: View {
             }
         }
         .padding()
-        .background(Color.white.opacity(0.8))
+        .background(AppColors.elevatedBackground.opacity(0.92))
         .cornerRadius(AppCornerRadius.xl)
     }
 
