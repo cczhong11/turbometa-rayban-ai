@@ -486,6 +486,7 @@ struct InfoRow: View {
 struct HomeCardSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("home.card.liveAI.visible") private var isLiveAIVisible = true
+    @AppStorage("home.card.exhibitGuide.visible") private var isExhibitGuideVisible = true
     @AppStorage("home.card.bookSummary.visible") private var isBookSummaryVisible = true
     @AppStorage("home.card.chatReply.visible") private var isChatReplyVisible = true
 
@@ -495,6 +496,10 @@ struct HomeCardSettingsView: View {
                 Section {
                     Toggle(isOn: $isLiveAIVisible) {
                         settingsRow(for: .liveAI)
+                    }
+
+                    Toggle(isOn: $isExhibitGuideVisible) {
+                        settingsRow(for: .exhibitGuide)
                     }
 
                     Toggle(isOn: $isBookSummaryVisible) {

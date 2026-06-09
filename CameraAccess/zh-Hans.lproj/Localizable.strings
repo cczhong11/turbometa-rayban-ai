@@ -225,6 +225,8 @@
 "cardsettings.liveai.description" = "眼镜实时对话";
 "cardsettings.liveai.connected" = "保留现有眼镜实时对话能力";
 "cardsettings.liveai.disconnected" = "保留入口，未连接眼镜时会提示";
+"cardsettings.exhibitguide.title" = "展品讲解";
+"cardsettings.exhibitguide.description" = "自动拍照 OCR + Gemini 图文讲解";
 "cardsettings.booksummary.title" = "书页总结";
 "cardsettings.booksummary.description" = "iPhone OCR + Gemini";
 "cardsettings.chatreply.title" = "聊天回复";
@@ -272,6 +274,7 @@
 "prompt.quickvision.blind" = "为视障用户详细描述眼前的环境，包括：\n1. 周围有什么物体和人\n2. 大概的距离和方位\n3. 是否有障碍物或危险\n4. 环境的整体氛围（室内/室外、明暗等）\n5. 任何需要注意的细节\n\n描述要清晰、具体，使用方位词（前方、左侧等），控制在80字以内。";
 "prompt.quickvision.reading" = "识别并朗读图片中的文字内容。要求：\n1. 准确识别所有可见文字\n2. 按照阅读顺序组织内容\n3. 如果是菜单/标牌，说明类型\n4. 如果文字不清晰，说明情况\n\n直接朗读文字内容，不需要额外解释。";
 "prompt.quickvision.translate" = "识别图片中的文字，并翻译成{LANGUAGE}。要求：\n1. 准确识别所有可见文字\n2. 翻译要准确、自然\n3. 如果有多段文字，分段翻译\n4. 直接说翻译结果，不需要说明原文\n\n适合语音播报，控制在100字以内。";
+"prompt.quickvision.docent" = "识别图片中的展品、说明牌和场景文字，像博物馆讲解员一样，结合图像和文字内容做口语化讲解。";
 "prompt.quickvision.encyclopedia" = "识别图片中的物体、建筑、艺术品或生物，提供百科知识介绍。包括：\n1. 名称和分类\n2. 历史背景或来源\n3. 有趣的知识点\n4. 相关文化意义\n\n像博物馆讲解员一样，生动有趣，适合语音播报，控制在100字以内。";
 
 "quickvision.mode.standard" = "默认模式";
@@ -279,6 +282,7 @@
 "quickvision.mode.blind" = "盲人模式";
 "quickvision.mode.reading" = "阅读模式";
 "quickvision.mode.translate" = "翻译模式";
+"quickvision.mode.docent" = "讲解模式";
 "quickvision.mode.encyclopedia" = "百科模式";
 "quickvision.mode.custom" = "自定义提示词";
 
@@ -287,6 +291,7 @@
 "quickvision.mode.blind.desc" = "为视障用户描述环境";
 "quickvision.mode.reading.desc" = "识别并朗读文字";
 "quickvision.mode.translate.desc" = "识别并翻译文字";
+"quickvision.mode.docent.desc" = "OCR 后结合图片进行讲解";
 "quickvision.mode.encyclopedia.desc" = "百科知识介绍";
 "quickvision.mode.custom.desc" = "使用自定义提示词";
 
@@ -305,6 +310,16 @@
 "quickvision.tab" = "快速识图";
 "quickvision.records.empty" = "暂无识图记录";
 "quickvision.records.empty.hint" = "使用快速识图功能后记录将显示在这里";
+"exhibitguide.title" = "展品讲解";
+"exhibitguide.result" = "讲解结果";
+"exhibitguide.ocr" = "识别到的文字";
+"exhibitguide.processing" = "讲解中...";
+"exhibitguide.retry" = "重新讲解";
+"exhibitguide.pick.photo" = "从相册选择";
+"exhibitguide.status.preparing.photo" = "正在处理图片";
+"exhibitguide.status.capturing" = "正在拍照";
+"exhibitguide.status.ocr" = "正在识别文字";
+"exhibitguide.status.explaining" = "正在生成讲解";
 
 // MARK: - Live AI Modes
 "liveai.mode.standard" = "默认模式";

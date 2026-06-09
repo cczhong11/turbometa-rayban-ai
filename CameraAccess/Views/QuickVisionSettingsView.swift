@@ -15,7 +15,7 @@ struct QuickVisionSettingsView: View {
             List {
                 // 识图模式选择
                 Section {
-                    ForEach(QuickVisionMode.allCases) { mode in
+                    ForEach(QuickVisionMode.userSelectableModes) { mode in
                         Button {
                             modeManager.setMode(mode)
                         } label: {
@@ -127,6 +127,8 @@ struct QuickVisionSettingsView: View {
             return .green
         case .translate:
             return .orange
+        case .docent:
+            return .brown
         case .encyclopedia:
             return .brown
         case .custom:

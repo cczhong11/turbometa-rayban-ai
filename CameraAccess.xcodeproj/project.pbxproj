@@ -77,6 +77,9 @@
 		6FE225749B8E795D8D265971 /* QuickVisionStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F490219E64EC144DAF8A8C /* QuickVisionStorage.swift */; };
 		759D8C3F84F44478678CA613 /* LiveAIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC72379319F7F8AAF8019018 /* LiveAIManager.swift */; };
 		8AAC01AA9E2C673BDDD9C7C5 /* QuickVisionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414A2AC7E8B825BC1B4DB93F /* QuickVisionModels.swift */; };
+		9A1000000000000000000001 /* ImageOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A1000000000000000000002 /* ImageOCRService.swift */; };
+		9A1000000000000000000003 /* GeminiExhibitGuideService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A1000000000000000000004 /* GeminiExhibitGuideService.swift */; };
+		9A1000000000000000000005 /* ExhibitGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A1000000000000000000006 /* ExhibitGuideView.swift */; };
 		8FD96B7F2E6F0A9800F56AB1 /* TurboMetaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD96B792E6F0A9800F56AB1 /* TurboMetaApp.swift */; };
 		8FD96B8D2E6F0A9800F56AB1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8FD96B772E6F0A9800F56AB1 /* Assets.xcassets */; };
 		8FD96B952E6F0F7D00F56AB1 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8FD96B942E6F0F7D00F56AB1 /* MWDATCore */; };
@@ -196,6 +199,9 @@
 		8FD96B782E6F0A9800F56AB1 /* TurboMeta.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TurboMeta.entitlements; sourceTree = "<group>"; };
 		8FD96B792E6F0A9800F56AB1 /* TurboMetaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurboMetaApp.swift; sourceTree = "<group>"; };
 		8FD96B7B2E6F0A9800F56AB1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9A1000000000000000000002 /* ImageOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageOCRService.swift; sourceTree = "<group>"; };
+		9A1000000000000000000004 /* GeminiExhibitGuideService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiExhibitGuideService.swift; sourceTree = "<group>"; };
+		9A1000000000000000000006 /* ExhibitGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExhibitGuideView.swift; sourceTree = "<group>"; };
 		C7F490219E64EC144DAF8A8C /* QuickVisionStorage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickVisionStorage.swift; sourceTree = "<group>"; };
 		CA3E36CE337855A7F17F2AC8 /* QuickVisionService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickVisionService.swift; sourceTree = "<group>"; };
 		DC72379319F7F8AAF8019018 /* LiveAIManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LiveAIManager.swift; path = Managers/LiveAIManager.swift; sourceTree = "<group>"; };
@@ -285,8 +291,10 @@
 				4BA57A8F2EF8227E002EC214 /* OmniRealtimeService.swift */,
 				4BA57A902EF8227E002EC214 /* VisionAPIConfig.swift */,
 				4BA57A912EF8227E002EC214 /* VisionAPIService.swift */,
+				9A1000000000000000000002 /* ImageOCRService.swift */,
 				069172850B30A2766C8BD4B5 /* TTSService.swift */,
 				CA3E36CE337855A7F17F2AC8 /* QuickVisionService.swift */,
+				9A1000000000000000000004 /* GeminiExhibitGuideService.swift */,
 				63EB4C91D8E0C8AC944DF95A /* GeminiLiveService.swift */,
 				C7F490219E64EC144DAF8A8C /* QuickVisionStorage.swift */,
 				LT1002000200020002 /* LiveTranslateService.swift */,
@@ -374,6 +382,7 @@
 				4BA57AAE2EF8227E002EC214 /* GalleryView.swift */,
 				4BA57AAF2EF8227E002EC214 /* HomeScreenView.swift */,
 				B00100010001000100010006 /* FoodLogView.swift */,
+				9A1000000000000000000006 /* ExhibitGuideView.swift */,
 				4BA57AB02EF8227E002EC214 /* LeanEatView.swift */,
 				4BA57AB12EF8227E002EC214 /* LiveAIView.swift */,
 				4BA57AB22EF8227E002EC214 /* MainAppView.swift */,
@@ -647,6 +656,7 @@
 				B00100010001000100010003 /* ChatReplyWorkspaceView.swift in Sources */,
 				B00100010001000100010001 /* BookLibraryView.swift in Sources */,
 				B00100010001000100010005 /* FoodLogView.swift in Sources */,
+				9A1000000000000000000005 /* ExhibitGuideView.swift in Sources */,
 				4BA57AED2EF8227E002EC214 /* TurboMetaHomeView.swift in Sources */,
 				4BA57AEE2EF8227E002EC214 /* OmniRealtimeService.swift in Sources */,
 				4BA57AEF2EF8227E002EC214 /* HomeScreenView.swift in Sources */,
@@ -660,6 +670,8 @@
 				217BDD58A35C2D24403F74BF /* APIProviderManager.swift in Sources */,
 				2D194F19524B5A74AAA4F325 /* GeminiLiveService.swift in Sources */,
 				8AAC01AA9E2C673BDDD9C7C5 /* QuickVisionModels.swift in Sources */,
+				9A1000000000000000000001 /* ImageOCRService.swift in Sources */,
+				9A1000000000000000000003 /* GeminiExhibitGuideService.swift in Sources */,
 				6FE225749B8E795D8D265971 /* QuickVisionStorage.swift in Sources */,
 				2746170F50E225008AB717CE /* QuickVisionModeManager.swift in Sources */,
 				5F1DD829120116C2EB177411 /* QuickVisionSettingsView.swift in Sources */,

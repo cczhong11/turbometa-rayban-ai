@@ -14,6 +14,7 @@ enum QuickVisionMode: String, CaseIterable, Codable, Identifiable {
     case blind = "blind"            // 盲人模式
     case reading = "reading"        // 阅读模式
     case translate = "translate"    // 翻译模式
+    case docent = "docent"          // 展品讲解模式
     case encyclopedia = "encyclopedia" // 百科（博物馆）模式
     case custom = "custom"          // 自定义提示词
 
@@ -31,6 +32,8 @@ enum QuickVisionMode: String, CaseIterable, Codable, Identifiable {
             return "quickvision.mode.reading".localized
         case .translate:
             return "quickvision.mode.translate".localized
+        case .docent:
+            return "quickvision.mode.docent".localized
         case .encyclopedia:
             return "quickvision.mode.encyclopedia".localized
         case .custom:
@@ -50,6 +53,8 @@ enum QuickVisionMode: String, CaseIterable, Codable, Identifiable {
             return "text.viewfinder"
         case .translate:
             return "character.bubble"
+        case .docent:
+            return "building.columns.circle"
         case .encyclopedia:
             return "books.vertical.circle"
         case .custom:
@@ -69,6 +74,8 @@ enum QuickVisionMode: String, CaseIterable, Codable, Identifiable {
             return "quickvision.mode.reading.desc".localized
         case .translate:
             return "quickvision.mode.translate.desc".localized
+        case .docent:
+            return "quickvision.mode.docent.desc".localized
         case .encyclopedia:
             return "quickvision.mode.encyclopedia.desc".localized
         case .custom:
@@ -90,12 +97,18 @@ enum QuickVisionMode: String, CaseIterable, Codable, Identifiable {
         case .translate:
             // 翻译模式需要从 Manager 获取目标语言
             return "prompt.quickvision.translate".localized
+        case .docent:
+            return "prompt.quickvision.docent".localized
         case .encyclopedia:
             return "prompt.quickvision.encyclopedia".localized
         case .custom:
             // 自定义模式需要从 Manager 获取
             return ""
         }
+    }
+
+    static var userSelectableModes: [QuickVisionMode] {
+        allCases.filter { $0 != .docent }
     }
 }
 

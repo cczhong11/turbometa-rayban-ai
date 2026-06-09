@@ -225,6 +225,8 @@
 "cardsettings.liveai.description" = "Real-time glasses conversation";
 "cardsettings.liveai.connected" = "Keep the existing real-time glasses conversation entry";
 "cardsettings.liveai.disconnected" = "Keep the entry and show a prompt when glasses are not connected";
+"cardsettings.exhibitguide.title" = "Exhibit Guide";
+"cardsettings.exhibitguide.description" = "Auto capture, OCR, and Gemini narration";
 "cardsettings.booksummary.title" = "Book Summary";
 "cardsettings.booksummary.description" = "iPhone OCR + Gemini";
 "cardsettings.chatreply.title" = "Chat Reply";
@@ -272,6 +274,7 @@
 "prompt.quickvision.blind" = "Describe the environment in detail for a visually impaired user, including:\n1. Objects and people around\n2. Approximate distances and directions\n3. Any obstacles or hazards\n4. Overall atmosphere (indoor/outdoor, lighting)\n5. Important details to note\n\nBe clear and specific, use directional words (ahead, left side), under 80 words.";
 "prompt.quickvision.reading" = "Identify and read aloud the text in the image. Requirements:\n1. Accurately identify all visible text\n2. Organize content in reading order\n3. If it's a menu/sign, mention the type\n4. If text is unclear, mention it\n\nRead the text content directly, no extra explanation needed.";
 "prompt.quickvision.translate" = "Identify the text in the image and translate it to {LANGUAGE}. Requirements:\n1. Accurately identify all visible text\n2. Translate accurately and naturally\n3. If there are multiple paragraphs, translate separately\n4. Just say the translation, no need to mention the original\n\nSuitable for voice announcement, under 100 words.";
+"prompt.quickvision.docent" = "Identify the exhibit, signage, and visible text, then explain it like a museum guide by combining the image and OCR text.";
 "prompt.quickvision.encyclopedia" = "Identify the object, building, artwork, or creature in the image and provide encyclopedia-style information. Include:\n1. Name and classification\n2. Historical background or origin\n3. Interesting facts\n4. Cultural significance\n\nBe like a museum guide, engaging and informative, suitable for voice announcement, under 100 words.";
 
 "quickvision.mode.standard" = "Standard Mode";
@@ -279,6 +282,7 @@
 "quickvision.mode.blind" = "Accessibility Mode";
 "quickvision.mode.reading" = "Reading Mode";
 "quickvision.mode.translate" = "Translation Mode";
+"quickvision.mode.docent" = "Docent Mode";
 "quickvision.mode.encyclopedia" = "Encyclopedia Mode";
 "quickvision.mode.custom" = "Custom Prompt";
 
@@ -287,6 +291,7 @@
 "quickvision.mode.blind.desc" = "Describe environment for accessibility";
 "quickvision.mode.reading.desc" = "Identify and read text";
 "quickvision.mode.translate.desc" = "Identify and translate text";
+"quickvision.mode.docent.desc" = "Use OCR plus image context for narration";
 "quickvision.mode.encyclopedia.desc" = "Encyclopedia information";
 "quickvision.mode.custom.desc" = "Use custom prompt";
 
@@ -305,6 +310,16 @@
 "quickvision.tab" = "Quick Vision";
 "quickvision.records.empty" = "No Vision Records";
 "quickvision.records.empty.hint" = "Records will appear here after using Quick Vision";
+"exhibitguide.title" = "Exhibit Guide";
+"exhibitguide.result" = "Guide Result";
+"exhibitguide.ocr" = "Recognized Text";
+"exhibitguide.processing" = "Explaining...";
+"exhibitguide.retry" = "Run Again";
+"exhibitguide.pick.photo" = "Choose from Photos";
+"exhibitguide.status.preparing.photo" = "Preparing image";
+"exhibitguide.status.capturing" = "Capturing photo";
+"exhibitguide.status.ocr" = "Reading text";
+"exhibitguide.status.explaining" = "Generating narration";
 
 // MARK: - Live AI Modes
 "liveai.mode.standard" = "Standard Mode";
