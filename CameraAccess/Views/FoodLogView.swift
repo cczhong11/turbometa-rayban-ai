@@ -196,10 +196,35 @@ struct FoodLogView: View {
 
     private func foodLogSection(_ section: FoodLogSection) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text(section.title)
-                .font(AppTypography.title2)
-                .foregroundColor(AppColors.textPrimary)
-                .padding(.horizontal, AppSpacing.xs)
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                Text(section.title)
+                    .font(AppTypography.title2)
+                    .foregroundColor(AppColors.textPrimary)
+
+                HStack(spacing: AppSpacing.sm) {
+                    sectionMetricPill(
+                        title: "热量",
+                        value: "\(section.totalCalories) kcal",
+                        color: .red
+                    )
+                    sectionMetricPill(
+                        title: "蛋白质",
+                        value: String(format: "%.1f g", section.totalProtein),
+                        color: .green
+                    )
+                    sectionMetricPill(
+                        title: "脂肪",
+                        value: String(format: "%.1f g", section.totalFat),
+                        color: .yellow
+                    )
+                    sectionMetricPill(
+                        title: "碳水",
+                        value: String(format: "%.1f g", section.totalCarbohydrates),
+                        color: .blue
+                    )
+                }
+            }
+            .padding(.horizontal, AppSpacing.xs)
 
             VStack(spacing: AppSpacing.sm) {
                 ForEach(section.entries) { entry in
@@ -216,6 +241,21 @@ struct FoodLogView: View {
                 }
             }
         }
+    }
+
+    private func sectionMetricPill(title: String, value: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(AppTypography.caption)
+                .foregroundColor(AppColors.textSecondary)
+            Text(value)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundColor(color)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.08))
+        .cornerRadius(AppCornerRadius.lg)
     }
 
     private func summaryPill(title: String, value: String, color: Color) -> some View {
@@ -307,6 +347,22 @@ struct FoodLogSection: Identifiable {
     let entries: [FoodLogEntry]
 
     var id: String { title }
+
+    var totalCalories: Int {
+        Int(entries.reduce(0) { $0 + ($1.cal ?? 0) }.rounded())
+    }
+
+    var totalProtein: Double {
+        entries.reduce(0) { $0 + ($1.protein ?? 0) }
+    }
+
+    var totalFat: Double {
+        entries.reduce(0) { $0 + ($1.fat ?? 0) }
+    }
+
+    var totalCarbohydrates: Double {
+        entries.reduce(0) { $0 + ($1.carbohydrates ?? 0) }
+    }
 }
 
 enum FoodLogRange: Int, CaseIterable, Identifiable {
