@@ -315,9 +315,11 @@
 "exhibitguide.ocr" = "Recognized Text";
 "exhibitguide.processing" = "Explaining...";
 "exhibitguide.retry" = "Run Again";
+"exhibitguide.pause" = "Pause";
 "exhibitguide.pick.photo" = "Choose from Photos";
 "exhibitguide.status.preparing.photo" = "Preparing image";
 "exhibitguide.status.capturing" = "Capturing photo";
+"exhibitguide.status.cancelled" = "Paused";
 "exhibitguide.status.ocr" = "Reading text";
 "exhibitguide.status.explaining" = "Generating narration";
 

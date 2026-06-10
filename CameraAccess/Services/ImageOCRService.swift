@@ -41,11 +41,7 @@ struct ImageOCRService {
                     .filter { !$0.isEmpty }
                     .joined(separator: "\n")
 
-                if orderedText.isEmpty {
-                    continuation.resume(throwing: ImageOCRServiceError.emptyText)
-                } else {
-                    continuation.resume(returning: ImageOCRResult(fullText: orderedText))
-                }
+                continuation.resume(returning: ImageOCRResult(fullText: orderedText))
             }
 
             request.recognitionLevel = .accurate
@@ -81,7 +77,6 @@ struct ImageOCRService {
 enum ImageOCRServiceError: LocalizedError {
     case invalidImage
     case ocrFailed
-    case emptyText
 
     var errorDescription: String? {
         switch self {
@@ -89,8 +84,6 @@ enum ImageOCRServiceError: LocalizedError {
             return "这张图片暂时处理不了，换一张试试。"
         case .ocrFailed:
             return "OCR 识别失败。"
-        case .emptyText:
-            return "没有识别到文字，换个角度再试试。"
         }
     }
 }

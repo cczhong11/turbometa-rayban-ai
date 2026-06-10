@@ -315,9 +315,11 @@
 "exhibitguide.ocr" = "识别到的文字";
 "exhibitguide.processing" = "讲解中...";
 "exhibitguide.retry" = "重新讲解";
+"exhibitguide.pause" = "暂停讲解";
 "exhibitguide.pick.photo" = "从相册选择";
 "exhibitguide.status.preparing.photo" = "正在处理图片";
 "exhibitguide.status.capturing" = "正在拍照";
+"exhibitguide.status.cancelled" = "已暂停";
 "exhibitguide.status.ocr" = "正在识别文字";
 "exhibitguide.status.explaining" = "正在生成讲解";
 

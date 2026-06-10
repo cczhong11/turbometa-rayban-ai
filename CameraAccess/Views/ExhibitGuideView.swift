@@ -17,6 +17,7 @@ struct ExhibitGuideView: View {
     @State private var capturedImage: UIImage?
     @State private var statusText = "准备中..."
     @State private var showImagePicker = false
+    @State private var guideTask: Task<Void, Never>?
 
     private let ocrService = ImageOCRService()
 
@@ -49,14 +50,12 @@ struct ExhibitGuideView: View {
         }
         .preferredColorScheme(.dark)
         .task {
-            await runGuideFlow()
+            startGuideFlow()
         }
         .sheet(isPresented: $showImagePicker) {
             MediaPickerView(mode: .image) { url, _ in
                 capturedImage = UIImage(contentsOfFile: url.path)
-                Task {
-                    await runGuideFlow(with: capturedImage)
-                }
+                startGuideFlow(with: capturedImage)
             }
         }
     }
@@ -184,9 +183,7 @@ struct ExhibitGuideView: View {
     private var actionSection: some View {
         VStack(spacing: AppSpacing.md) {
             Button {
-                Task {
-                    await runGuideFlow()
-                }
+                startGuideFlow()
             } label: {
                 HStack(spacing: AppSpacing.sm) {
                     if isProcessing {
@@ -210,6 +207,23 @@ struct ExhibitGuideView: View {
                 .cornerRadius(AppCornerRadius.lg)
             }
             .disabled(isProcessing)
+
+            if isProcessing {
+                Button {
+                    cancelGuideFlow()
+                } label: {
+                    HStack {
+                        Image(systemName: "pause.fill")
+                        Text("exhibitguide.pause".localized)
+                    }
+                    .font(AppTypography.subheadline)
+                    .foregroundColor(.white)
+                    .padding(.vertical, AppSpacing.md)
+                    .padding(.horizontal, AppSpacing.xl)
+                    .background(Color.orange.opacity(0.8))
+                    .cornerRadius(AppCornerRadius.md)
+                }
+            }
 
             Button {
                 showImagePicker = true
@@ -244,6 +258,21 @@ struct ExhibitGuideView: View {
                 }
             }
         }
+    }
+
+    private func startGuideFlow(with providedImage: UIImage? = nil) {
+        guideTask?.cancel()
+        guideTask = Task {
+            await runGuideFlow(with: providedImage)
+        }
+    }
+
+    private func cancelGuideFlow() {
+        guideTask?.cancel()
+        guideTask = nil
+        tts.stop()
+        statusText = "exhibitguide.status.cancelled".localized
+        isProcessing = false
     }
 
     private func runGuideFlow(with providedImage: UIImage? = nil) async {
@@ -298,6 +327,8 @@ struct ExhibitGuideView: View {
                 )
             )
             tts.speak(guide)
+        } catch is CancellationError {
+            statusText = "exhibitguide.status.cancelled".localized
         } catch let error as LocalizedError {
             errorMessage = error.errorDescription ?? error.localizedDescription
             tts.speak(errorMessage ?? "处理失败")
@@ -307,6 +338,7 @@ struct ExhibitGuideView: View {
         }
 
         isProcessing = false
+        guideTask = nil
     }
 
     private func capturePhoto() async throws -> UIImage {
@@ -346,6 +378,7 @@ struct ExhibitGuideView: View {
     }
 
     private func closeView() {
+        guideTask?.cancel()
         tts.stop()
         Task {
             await streamViewModel.stopSession()
