@@ -25,13 +25,15 @@ struct ExhibitGuideView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                VStack(spacing: AppSpacing.xl) {
-                    previewSection
-                    statusSection
-                    actionSection
-                    Spacer()
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: AppSpacing.xl) {
+                        previewSection
+                        statusSection
+                        actionSection
+                    }
+                    .frame(maxWidth: .infinity, alignment: .top)
+                    .padding()
                 }
-                .padding()
             }
             .navigationTitle("exhibitguide.title".localized)
             .navigationBarTitleDisplayMode(.inline)
@@ -138,6 +140,8 @@ struct ExhibitGuideView: View {
                     Text(resultText)
                         .font(AppTypography.body)
                         .foregroundColor(.white.opacity(0.92))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.white.opacity(0.1))
@@ -153,6 +157,8 @@ struct ExhibitGuideView: View {
                     Text(ocrText)
                         .font(AppTypography.caption)
                         .foregroundColor(.white.opacity(0.85))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.white.opacity(0.06))
